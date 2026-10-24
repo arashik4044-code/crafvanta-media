@@ -25,6 +25,7 @@ import { PortfolioCategoryPage } from './components/PortfolioCategoryPage';
 import { ContactPage } from './components/ContactPage';
 import { BlurImage } from './components/BlurImage';
 import { CustomCursor } from './components/CustomCursor';
+import { Analytics } from '@vercel/analytics/react';
 
 // Helper for Hero Slide Icons
 export const getSlideIcon = (id?: string) => {
@@ -1679,6 +1680,7 @@ export default function App() {
         heroSlides={heroSlides}
         setHeroSlides={setHeroSlides}
       />
+      <Analytics />
     </div>
   );
 }
