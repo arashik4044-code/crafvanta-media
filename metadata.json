@@ -1,0 +1,6 @@
+{
+  "name": "Crafvanta Media",
+  "description": "Sleek, responsive homepage for a digital marketing agency startup, featuring service showcases and portfolio highlights.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
