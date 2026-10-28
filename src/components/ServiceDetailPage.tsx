@@ -255,9 +255,9 @@ export function ServiceDetailPage({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
           <button
             onClick={onBack}
-            className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer group"
+            className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer group"
           >
-            <span className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-blue-600 group-hover:text-white flex items-center justify-center transition-colors">
+            <span className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-emerald-600 group-hover:text-white flex items-center justify-center transition-colors">
               ←
             </span>
             <span>Back to All Services</span>
@@ -266,12 +266,12 @@ export function ServiceDetailPage({
           <div className="hidden sm:flex items-center gap-2 text-xs text-slate-400 font-mono">
             <span>Services</span>
             <span>/</span>
-            <span className="text-blue-600 dark:text-blue-400 font-bold">{service.title}</span>
+            <span className="text-emerald-600 dark:text-emerald-400 font-bold">{service.title}</span>
           </div>
 
           <button
             onClick={() => onOpenContact(service.title)}
-            className="px-4 py-1.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+            className="px-4 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
           >
             Inquire For This Service
           </button>
@@ -280,14 +280,14 @@ export function ServiceDetailPage({
 
       {/* Hero Service Banner */}
       <section className="relative py-12 lg:py-16 overflow-hidden border-b border-slate-100 dark:border-slate-800">
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute top-0 right-1/4 w-96 h-96 bg-emerald-500/10 blur-[120px] rounded-full pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-12 gap-10 items-center">
             {/* Left Header Info */}
             <div className="lg:col-span-7 space-y-6">
               <div className="flex flex-wrap items-center gap-2.5">
-                <span className="px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                <span className="px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                   {service.category}
                 </span>
                 <span className="px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
@@ -299,7 +299,7 @@ export function ServiceDetailPage({
                 {service.title}
               </h1>
 
-              <p className="text-base sm:text-lg text-blue-600 dark:text-blue-400 font-semibold leading-relaxed">
+              <p className="text-base sm:text-lg text-emerald-600 dark:text-emerald-400 font-semibold leading-relaxed">
                 {details.tagline}
               </p>
 
@@ -311,7 +311,7 @@ export function ServiceDetailPage({
               <div className="flex flex-wrap items-center gap-4 pt-2">
                 <button
                   onClick={() => onOpenContact(service.title)}
-                  className="px-6 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-blue-500/25 flex items-center gap-2 transition-all cursor-pointer"
+                  className="px-6 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-emerald-500/25 flex items-center gap-2 transition-all cursor-pointer"
                 >
                   <span>Start Your Project</span>
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor">
@@ -331,7 +331,7 @@ export function ServiceDetailPage({
 
             {/* Right Visual Image Mockup Card */}
             <div className="lg:col-span-5">
-              <div className="relative rounded-3xl overflow-hidden border-2 border-blue-500/80 shadow-2xl ring-1 ring-blue-400/30 group">
+              <div className="relative rounded-3xl overflow-hidden border-2 border-emerald-500/80 shadow-2xl ring-1 ring-emerald-400/30 group">
                 {service.imageUrl ? (
                   <div className="relative h-72 sm:h-80 w-full overflow-hidden bg-slate-900">
                     <img
@@ -342,17 +342,17 @@ export function ServiceDetailPage({
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
                     <div className="absolute bottom-4 left-4 right-4 p-4 rounded-2xl bg-slate-900/90 backdrop-blur-md border border-white/10 flex items-center justify-between text-white">
                       <div>
-                        <span className="text-[10px] font-mono text-blue-400 uppercase tracking-widest block">SPECIALIZED SERVICE</span>
+                        <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest block">SPECIALIZED SERVICE</span>
                         <h4 className="text-xs font-bold">{service.title}</h4>
                       </div>
                       <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
                     </div>
                   </div>
                 ) : (
-                  <div className="h-72 sm:h-80 bg-gradient-to-br from-blue-900 via-indigo-950 to-slate-950 p-8 flex flex-col justify-between text-white">
+                  <div className="h-72 sm:h-80 bg-gradient-to-br from-emerald-950 via-indigo-950 to-slate-950 p-8 flex flex-col justify-between text-white">
                     <span className="text-4xl">✦</span>
                     <div>
-                      <span className="text-xs text-blue-400 font-mono uppercase tracking-wider">{service.category}</span>
+                      <span className="text-xs text-emerald-400 font-mono uppercase tracking-wider">{service.category}</span>
                       <h3 className="text-2xl font-bold mt-1">{service.title}</h3>
                     </div>
                   </div>
@@ -369,7 +369,7 @@ export function ServiceDetailPage({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {details.metrics.map((m, idx) => (
               <div key={idx} className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 text-center shadow-xs">
-                <div className="text-2xl sm:text-3xl font-black text-blue-600 dark:text-blue-400">{m.value}</div>
+                <div className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400">{m.value}</div>
                 <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-1">{m.label}</div>
               </div>
             ))}
@@ -392,7 +392,7 @@ export function ServiceDetailPage({
               onClick={() => setActiveTab(tab.id as any)}
               className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                 activeTab === tab.id
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-500/20'
                   : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
@@ -414,13 +414,13 @@ export function ServiceDetailPage({
             {/* Step-by-Step Execution Workflow */}
             <div>
               <div className="mb-8">
-                <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">OUR WORKFLOW</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">OUR WORKFLOW</span>
                 <h3 className="text-2xl sm:text-3xl font-black text-slate-950 dark:text-white mt-1">4-Step Execution Framework</h3>
               </div>
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {details.process.map((p, idx) => (
                   <div key={idx} className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3 shadow-xs">
-                    <span className="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400">
+                    <span className="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400">
                       STEP {p.step}
                     </span>
                     <h4 className="font-bold text-base text-slate-900 dark:text-white">{p.title}</h4>
@@ -431,12 +431,12 @@ export function ServiceDetailPage({
             </div>
 
             {/* Tools & Tech Stack */}
-            <div className="p-8 rounded-3xl bg-blue-950 text-white border border-blue-900/80">
-              <span className="text-xs font-mono text-blue-400 uppercase tracking-widest block mb-2">TECHNOLOGY & TOOLS</span>
+            <div className="p-8 rounded-3xl bg-emerald-950 text-white border border-emerald-900/80">
+              <span className="text-xs font-mono text-emerald-400 uppercase tracking-widest block mb-2">TECHNOLOGY & TOOLS</span>
               <h3 className="text-xl font-bold mb-4">Technologies & Platforms We Use</h3>
               <div className="flex flex-wrap gap-2">
                 {details.tools.map((tool, idx) => (
-                  <span key={idx} className="px-3 py-1.5 rounded-xl bg-blue-900/80 border border-blue-700/60 text-xs font-semibold text-blue-200">
+                  <span key={idx} className="px-3 py-1.5 rounded-xl bg-emerald-900/80 border border-emerald-700/60 text-xs font-semibold text-emerald-200">
                     ⚡ {tool}
                   </span>
                 ))}
@@ -450,8 +450,8 @@ export function ServiceDetailPage({
           <div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {details.keyDeliverables.map((item, idx) => (
-                <div key={idx} className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 hover:border-blue-500/50 transition-all shadow-xs group">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950 text-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <div key={idx} className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 hover:border-emerald-500/50 transition-all shadow-xs group">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950 text-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     {item.icon}
                   </div>
                   <h4 className="text-lg font-bold text-slate-950 dark:text-white mb-2">{item.title}</h4>
@@ -471,13 +471,13 @@ export function ServiceDetailPage({
                   key={idx}
                   className={`rounded-3xl p-8 flex flex-col justify-between transition-all ${
                     tier.popular
-                      ? 'bg-gradient-to-b from-blue-950/60 to-slate-900 border-2 border-blue-500 text-white shadow-xl'
+                      ? 'bg-gradient-to-b from-emerald-950/60 to-slate-900 border-2 border-emerald-500 text-white shadow-xl'
                       : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white'
                   }`}
                 >
                   <div>
                     {tier.popular && (
-                      <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-blue-600 text-white inline-block mb-3">
+                      <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-emerald-600 text-white inline-block mb-3">
                         RECOMMENDED PACKAGE
                       </span>
                     )}
@@ -490,7 +490,7 @@ export function ServiceDetailPage({
                     <ul className="space-y-3 mb-8 text-xs font-medium">
                       {tier.features.map((f, fIdx) => (
                         <li key={fIdx} className="flex items-center gap-2">
-                          <span className="text-blue-500 font-bold">✓</span>
+                          <span className="text-emerald-500 font-bold">✓</span>
                           <span>{f}</span>
                         </li>
                       ))}
@@ -499,7 +499,7 @@ export function ServiceDetailPage({
 
                   <button
                     onClick={() => onOpenContact(`${service.title} - ${tier.name}`)}
-                    className="w-full py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
+                    className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
                   >
                     Select {tier.name}
                   </button>
@@ -527,10 +527,10 @@ export function ServiceDetailPage({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">EXPLORE MORE</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">EXPLORE MORE</span>
               <h3 className="text-2xl font-black text-slate-950 dark:text-white mt-1">Other Specialized Services</h3>
             </div>
-            <button onClick={onBack} className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">
+            <button onClick={onBack} className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline">
               View All 9 Services →
             </button>
           </div>
@@ -543,15 +543,15 @@ export function ServiceDetailPage({
                 <div
                   key={other.id}
                   onClick={() => onSelectService(other)}
-                  className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-500/50 transition-all cursor-pointer group"
+                  className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-emerald-500/50 transition-all cursor-pointer group"
                 >
-                  <span className="text-[10px] font-mono text-blue-600 dark:text-blue-400 font-bold uppercase block mb-1">
+                  <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold uppercase block mb-1">
                     {other.category}
                   </span>
-                  <h4 className="font-bold text-sm text-slate-950 dark:text-white group-hover:text-blue-600 transition-colors">
+                  <h4 className="font-bold text-sm text-slate-950 dark:text-white group-hover:text-emerald-600 transition-colors">
                     {other.title}
                   </h4>
-                  <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 mt-3 inline-block group-hover:translate-x-1 transition-transform">
+                  <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 mt-3 inline-block group-hover:translate-x-1 transition-transform">
                     View Details →
                   </span>
                 </div>
@@ -562,14 +562,14 @@ export function ServiceDetailPage({
 
       {/* Bottom CTA Card */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12">
-        <div className="bg-[#031535] text-white rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden shadow-2xl border border-blue-900/60">
+        <div className="bg-[#062016] text-white rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden shadow-2xl border border-emerald-900/60">
           <h2 className="text-2xl sm:text-4xl font-black uppercase mb-3">Ready to scale with {service.title}?</h2>
           <p className="text-xs sm:text-sm text-slate-300 max-w-xl mx-auto mb-6">
             Get in touch with our strategy squad for a free consultation and customized project proposal.
           </p>
           <button
             onClick={() => onOpenContact(service.title)}
-            className="px-8 py-3.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-blue-500/25 transition-all cursor-pointer"
+            className="px-8 py-3.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/25 transition-all cursor-pointer"
           >
             Get Custom Strategy Proposal
           </button>

@@ -19,7 +19,7 @@ const testimonialsData: Testimonial[] = [
     company: 'Learning Kabbo',
     content: 'Crafvanta Media transformed our digital presence completely. Our student enrollment skyrocketed by 240% within 3 months of launching our campaigns with them.',
     rating: 5,
-    avatarBg: 'bg-blue-600 text-white',
+    avatarBg: 'bg-teal-600 text-white',
   },
   {
     id: '2',
@@ -83,7 +83,7 @@ export function TestimonialSlider() {
       onMouseLeave={() => setIsPaused(false)}
     >
       {/* Background glow effects */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-blue-500/5 dark:bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-emerald-500/5 dark:bg-emerald-500/10 blur-[120px] rounded-full pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div
@@ -93,8 +93,8 @@ export function TestimonialSlider() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="text-center max-w-2xl mx-auto mb-16"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800/60 text-blue-600 dark:text-blue-400 text-xs font-bold uppercase tracking-wider mb-4">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400 animate-pulse" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider mb-4">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 animate-pulse" />
             Client Testimonials
           </div>
           <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -149,7 +149,7 @@ export function TestimonialSlider() {
                     </div>
                   </div>
 
-                  <div className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/50">
+                  <div className="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/50">
                     Verified Partner
                   </div>
                 </div>
@@ -167,7 +167,7 @@ export function TestimonialSlider() {
                   aria-label={`Go to slide ${idx + 1}`}
                   className={`h-2 rounded-full transition-all cursor-pointer ${
                     currentIndex === idx
-                      ? 'w-8 bg-blue-600 dark:bg-blue-500'
+                      ? 'w-8 bg-emerald-600 dark:bg-emerald-500'
                       : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400'
                   }`}
                 />

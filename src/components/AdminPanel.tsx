@@ -47,13 +47,35 @@ export default function AdminPanel({
   heroSlides = initialHeroSlides,
   setHeroSlides,
 }: AdminPanelProps) {
-  // Authentication State
+  // Authentication State with custom email & password support
+  const [savedCredentials, setSavedCredentials] = useState<{ email: string; password: string }>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('crafvanta_admin_credentials');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+    return {
+      email: 'arashik3456@gmail.com',
+      password: 'admin123',
+    };
+  });
+
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     return localStorage.getItem('crafvanta_admin_auth') === 'true';
   });
-  const [adminEmail, setAdminEmail] = useState('admin@crafvantamedia.com');
+  const [adminEmail, setAdminEmail] = useState(() => savedCredentials.email || 'arashik3456@gmail.com');
   const [adminPassword, setAdminPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState('');
+  const [authSuccess, setAuthSuccess] = useState('');
+  const [authMode, setAuthMode] = useState<'login' | 'reset'>('login');
+  const [newPasswordInput, setNewPasswordInput] = useState('');
+  const [confirmPasswordInput, setConfirmPasswordInput] = useState('');
 
   // Current Admin Tab
   const [currentTab, setCurrentTab] = useState<
@@ -107,7 +129,7 @@ export default function AdminPanel({
   const [newClient, setNewClient] = useState<Partial<ClientBrand>>({
     name: '',
     sub: '',
-    color: 'bg-blue-50 text-blue-900 border-blue-200',
+    color: 'bg-emerald-50 text-emerald-900 border-emerald-200',
   });
   const [editingPageName, setEditingPageName] = useState<string | null>(null);
   const [editingSection, setEditingSection] = useState<string | null>(null);
@@ -488,17 +510,156 @@ export default function AdminPanel({
   // Deliveries State
   const [deliveries, setDeliveries] = useState(() => [
     { id: 'del-1', title: 'Enterprise Web App v2.0 Release', client: 'Apex Global', deadline: '2026-10-28', status: 'In QA', filesCount: 14 },
-    { id: 'del-2', title: 'Brand Identity & Motion Graphics Asset Pack', client: 'Zentrox Digital', deadline: '2026-10-30', status: 'Delivered', filesCount: 28 },
+    { id: 'del-2', title: 'Brand Identity & Motion Graphics Asset Pack', client: 'Crafvanta Partner', deadline: '2026-10-30', status: 'Delivered', filesCount: 28 },
     { id: 'del-3', title: '3D Product Render Video Reel', client: 'Lumiere Vision', deadline: '2026-11-05', status: 'In Progress', filesCount: 8 },
   ]);
 
-  // Tasks State
-  const [tasks, setTasks] = useState(() => [
-    { id: 't-1', title: 'Optimize Hero 3D Model Loading Speed', assignee: 'Tanvir Ahmed', priority: 'High', status: 'In Progress', tag: 'Engineering' },
-    { id: 't-2', title: 'Finalize Dark Theme Palette for Client Dashboard', assignee: 'Sabrina Khan', priority: 'Medium', status: 'Completed', tag: 'Design' },
-    { id: 't-3', title: 'Render Commercial Video Intro in 4K', assignee: 'Mahmud Hasan', priority: 'High', status: 'To Do', tag: 'Video' },
-    { id: 't-4', title: 'Run Facebook & Google Ads Retargeting Campaign', assignee: 'Nusrat Jahan', priority: 'Low', status: 'In Progress', tag: 'Marketing' },
-  ]);
+  // Tasks State & Persistence
+  const [tasks, setTasks] = useState<{
+    id: string;
+    title: string;
+    assignee: string;
+    priority: string;
+    status: string;
+    tag: string;
+    dueDate?: string;
+    description?: string;
+  }[]>(() => {
+    try {
+      const saved = localStorage.getItem('crafvanta_tasks');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return [
+      { id: 't-1', title: 'Optimize Hero 3D Model Loading Speed', assignee: 'Tanvir Ahmed', priority: 'High', status: 'In Progress', tag: 'Engineering', dueDate: '2026-11-01', description: 'Reduce GLTF asset payload and implement Draco compression.' },
+      { id: 't-2', title: 'Finalize Dark Theme Palette for Client Dashboard', assignee: 'Sabrina Khan', priority: 'Medium', status: 'Completed', tag: 'Design', dueDate: '2026-10-28', description: 'Selected slate-900 / emerald accents for UI contrast.' },
+      { id: 't-3', title: 'Render Commercial Video Intro in 4K', assignee: 'Mahmud Hasan', priority: 'High', status: 'To Do', tag: 'Video', dueDate: '2026-11-05', description: '3D motion intro sequence for Crafvanta enterprise clients.' },
+      { id: 't-4', title: 'Run Facebook & Google Ads Retargeting Campaign', assignee: 'Nusrat Jahan', priority: 'Low', status: 'In Progress', tag: 'Marketing', dueDate: '2026-11-10', description: 'Set up lookalike audiences and conversion pixel tracking.' },
+    ];
+  });
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('crafvanta_tasks', JSON.stringify(tasks));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [tasks]);
+
+  // Tasks Filter States & Modals
+  const [taskSearch, setTaskSearch] = useState('');
+  const [taskStatusFilter, setTaskStatusFilter] = useState('All');
+  const [taskTagFilter, setTaskTagFilter] = useState('All');
+  const [isNewTaskOpen, setIsNewTaskOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<{
+    id: string;
+    title: string;
+    assignee: string;
+    priority: string;
+    status: string;
+    tag: string;
+    dueDate?: string;
+    description?: string;
+  } | null>(null);
+  const [taskFormData, setTaskFormData] = useState({
+    title: '',
+    assignee: 'Tanvir Ahmed',
+    priority: 'Medium' as 'High' | 'Medium' | 'Low',
+    status: 'To Do' as 'To Do' | 'In Progress' | 'Completed',
+    tag: 'Engineering',
+    dueDate: new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0],
+    description: '',
+  });
+
+  const filteredTasks = useMemo(() => {
+    return tasks.filter((t) => {
+      const matchesStatus = taskStatusFilter === 'All' || t.status === taskStatusFilter;
+      const matchesTag = taskTagFilter === 'All' || t.tag === taskTagFilter;
+      const q = taskSearch.toLowerCase();
+      const matchesSearch =
+        !q ||
+        t.title.toLowerCase().includes(q) ||
+        t.assignee.toLowerCase().includes(q) ||
+        (t.description && t.description.toLowerCase().includes(q));
+      return matchesStatus && matchesTag && matchesSearch;
+    });
+  }, [tasks, taskStatusFilter, taskTagFilter, taskSearch]);
+
+  const handleOpenNewTaskModal = () => {
+    setEditingTask(null);
+    setTaskFormData({
+      title: '',
+      assignee: 'Tanvir Ahmed',
+      priority: 'Medium',
+      status: 'To Do',
+      tag: 'Engineering',
+      dueDate: new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0],
+      description: '',
+    });
+    setIsNewTaskOpen(true);
+  };
+
+  const handleOpenEditTaskModal = (task: typeof tasks[0]) => {
+    setEditingTask(task);
+    setTaskFormData({
+      title: task.title,
+      assignee: task.assignee || 'Tanvir Ahmed',
+      priority: (task.priority as any) || 'Medium',
+      status: (task.status as any) || 'To Do',
+      tag: task.tag || 'Engineering',
+      dueDate: task.dueDate || new Date().toISOString().split('T')[0],
+      description: task.description || '',
+    });
+    setIsNewTaskOpen(true);
+  };
+
+  const handleSaveTask = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!taskFormData.title.trim()) {
+      showToast('Please enter a task title');
+      return;
+    }
+    if (editingTask) {
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === editingTask.id
+            ? {
+                ...t,
+                title: taskFormData.title.trim(),
+                assignee: taskFormData.assignee.trim(),
+                priority: taskFormData.priority,
+                status: taskFormData.status,
+                tag: taskFormData.tag,
+                dueDate: taskFormData.dueDate,
+                description: taskFormData.description.trim(),
+              }
+            : t
+        )
+      );
+      showToast(`Updated task: ${taskFormData.title}`);
+    } else {
+      const newTask = {
+        id: `t-${Date.now()}`,
+        title: taskFormData.title.trim(),
+        assignee: taskFormData.assignee.trim() || 'Tanvir Ahmed',
+        priority: taskFormData.priority,
+        status: taskFormData.status,
+        tag: taskFormData.tag,
+        dueDate: taskFormData.dueDate,
+        description: taskFormData.description.trim(),
+      };
+      setTasks((prev) => [newTask, ...prev]);
+      showToast(`Task created: ${newTask.title}`);
+    }
+    setIsNewTaskOpen(false);
+    setEditingTask(null);
+  };
+
+  const handleDeleteTask = (taskId: string, title: string) => {
+    setTasks((prev) => prev.filter((t) => t.id !== taskId));
+    showToast(`Deleted task: ${title}`);
+  };
 
   // Attendance State
   const [attendanceLogs] = useState([
@@ -509,21 +670,316 @@ export default function AdminPanel({
     { id: 'a-5', name: 'Rifat Hossain', role: 'DevOps Engineer', checkIn: '---', status: 'On Leave', mode: 'Vacation' },
   ]);
 
-  // Employees State
-  const [employeeList, setEmployeeList] = useState([
-    { id: 'e-1', name: 'Tanvir Ahmed', role: 'Lead Full-Stack Architect', email: 'tanvir@crafvanta.com', department: 'Engineering', phone: '+880 1711 000111', status: 'Active' },
-    { id: 'e-2', name: 'Sabrina Khan', role: 'Senior UI/UX & Brand Lead', email: 'sabrina@crafvanta.com', department: 'Creative', phone: '+880 1819 222333', status: 'Active' },
-    { id: 'e-3', name: 'Mahmud Hasan', role: 'Motion Graphics Specialist', email: 'mahmud@crafvanta.com', department: 'Creative', phone: '+880 1912 333444', status: 'Active' },
-    { id: 'e-4', name: 'Nusrat Jahan', role: 'Growth & Performance Marketer', email: 'nusrat@crafvanta.com', department: 'Marketing', phone: '+880 1611 444555', status: 'Active' },
-  ]);
+  // Employees State & Persistence
+  const [employeeList, setEmployeeList] = useState<{
+    id: string;
+    name: string;
+    role: string;
+    email: string;
+    department: string;
+    phone: string;
+    status: string;
+    avatarUrl?: string;
+  }[]>(() => {
+    try {
+      const saved = localStorage.getItem('crafvanta_employees');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return [
+      { id: 'e-1', name: 'Tanvir Ahmed', role: 'Lead Full-Stack Architect', email: 'tanvir@crafvanta.com', department: 'Engineering', phone: '+880 1711 000111', status: 'Active' },
+      { id: 'e-2', name: 'Sabrina Khan', role: 'Senior UI/UX & Brand Lead', email: 'sabrina@crafvanta.com', department: 'Creative', phone: '+880 1819 222333', status: 'Active' },
+      { id: 'e-3', name: 'Mahmud Hasan', role: 'Motion Graphics Specialist', email: 'mahmud@crafvanta.com', department: 'Creative', phone: '+880 1912 333444', status: 'Active' },
+      { id: 'e-4', name: 'Nusrat Jahan', role: 'Growth & Performance Marketer', email: 'nusrat@crafvanta.com', department: 'Marketing', phone: '+880 1611 444555', status: 'Active' },
+    ];
+  });
 
-  // Expenses State
-  const [expenseLogs, setExpenseLogs] = useState([
-    { id: 'exp-1', category: 'Infrastructure', desc: 'AWS & Vercel Cloud Server Hosting', amount: 1250, vendor: 'AWS Cloud', date: '2026-10-15', status: 'Paid' },
-    { id: 'exp-2', category: 'Software', desc: 'Adobe Creative Cloud Enterprise Suite', amount: 840, vendor: 'Adobe Inc.', date: '2026-10-18', status: 'Paid' },
-    { id: 'exp-3', category: 'Marketing', desc: 'Meta & Google PPC Ad Spend', amount: 2400, vendor: 'Google Ads', date: '2026-10-21', status: 'Paid' },
-    { id: 'exp-4', category: 'Office', desc: 'Studio High-Speed Fiber Internet', amount: 180, vendor: 'Dot Internet', date: '2026-10-22', status: 'Pending' },
-  ]);
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('crafvanta_employees', JSON.stringify(employeeList));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [employeeList]);
+
+  // Employee Filter & Modal State
+  const [employeeSearch, setEmployeeSearch] = useState('');
+  const [employeeDepartmentFilter, setEmployeeDepartmentFilter] = useState('All');
+  const [isNewEmployeeOpen, setIsNewEmployeeOpen] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<{
+    id: string;
+    name: string;
+    role: string;
+    email: string;
+    department: string;
+    phone: string;
+    status: string;
+    avatarUrl?: string;
+  } | null>(null);
+  const [employeeFormData, setEmployeeFormData] = useState({
+    name: '',
+    role: '',
+    email: '',
+    department: 'Engineering',
+    phone: '',
+    status: 'Active',
+    avatarUrl: '',
+  });
+
+  const filteredEmployees = useMemo(() => {
+    return employeeList.filter((emp) => {
+      const matchesDept =
+        employeeDepartmentFilter === 'All' || emp.department === employeeDepartmentFilter;
+      const q = employeeSearch.toLowerCase();
+      const matchesSearch =
+        !q ||
+        emp.name.toLowerCase().includes(q) ||
+        emp.role.toLowerCase().includes(q) ||
+        emp.email.toLowerCase().includes(q) ||
+        emp.department.toLowerCase().includes(q) ||
+        emp.phone.toLowerCase().includes(q);
+      return matchesDept && matchesSearch;
+    });
+  }, [employeeList, employeeDepartmentFilter, employeeSearch]);
+
+  const handleOpenNewEmployeeModal = () => {
+    setEditingEmployee(null);
+    setEmployeeFormData({
+      name: '',
+      role: '',
+      email: '',
+      department: 'Engineering',
+      phone: '',
+      status: 'Active',
+      avatarUrl: '',
+    });
+    setIsNewEmployeeOpen(true);
+  };
+
+  const handleOpenEditEmployeeModal = (emp: typeof employeeList[0]) => {
+    setEditingEmployee(emp);
+    setEmployeeFormData({
+      name: emp.name,
+      role: emp.role,
+      email: emp.email,
+      department: emp.department,
+      phone: emp.phone,
+      status: emp.status,
+      avatarUrl: emp.avatarUrl || '',
+    });
+    setIsNewEmployeeOpen(true);
+  };
+
+  const handleSaveEmployee = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!employeeFormData.name.trim() || !employeeFormData.role.trim()) {
+      showToast('Please provide full name and role/designation');
+      return;
+    }
+
+    const email =
+      employeeFormData.email.trim() ||
+      `${employeeFormData.name.toLowerCase().replace(/\s+/g, '')}@crafvanta.com`;
+    const phone = employeeFormData.phone.trim() || '+880 1700 000000';
+
+    if (editingEmployee) {
+      setEmployeeList((prev) =>
+        prev.map((emp) =>
+          emp.id === editingEmployee.id
+            ? {
+                ...emp,
+                name: employeeFormData.name.trim(),
+                role: employeeFormData.role.trim(),
+                email,
+                department: employeeFormData.department,
+                phone,
+                status: employeeFormData.status,
+                avatarUrl: employeeFormData.avatarUrl,
+              }
+            : emp
+        )
+      );
+      showToast(`Updated team member: ${employeeFormData.name}`);
+    } else {
+      const newEmp = {
+        id: `e-${Date.now()}`,
+        name: employeeFormData.name.trim(),
+        role: employeeFormData.role.trim(),
+        email,
+        department: employeeFormData.department,
+        phone,
+        status: employeeFormData.status,
+        avatarUrl: employeeFormData.avatarUrl,
+      };
+      setEmployeeList((prev) => [...prev, newEmp]);
+      showToast(`Added ${newEmp.name} to agency team roster`);
+    }
+
+    setIsNewEmployeeOpen(false);
+    setEditingEmployee(null);
+  };
+
+  const handleDeleteEmployee = (empId: string, empName: string) => {
+    setEmployeeList((prev) => prev.filter((e) => e.id !== empId));
+    showToast(`Removed ${empName} from roster`);
+  };
+
+  // Expenses State & Persistence
+  const [expenseLogs, setExpenseLogs] = useState<{
+    id: string;
+    category: string;
+    desc: string;
+    amount: number;
+    vendor: string;
+    date: string;
+    status: string;
+    paymentMethod?: string;
+  }[]>(() => {
+    try {
+      const saved = localStorage.getItem('crafvanta_expenses');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return [
+      { id: 'exp-1', category: 'Infrastructure', desc: 'AWS & Vercel Cloud Server Hosting', amount: 125000, vendor: 'AWS Cloud Services', date: '2026-10-15', status: 'Paid', paymentMethod: 'Corporate Credit Card' },
+      { id: 'exp-2', category: 'Software', desc: 'Adobe Creative Cloud Enterprise Suite', amount: 84000, vendor: 'Adobe Inc.', date: '2026-10-18', status: 'Paid', paymentMethod: 'Bank Transfer' },
+      { id: 'exp-3', category: 'Marketing', desc: 'Meta & Google PPC Ad Spend', amount: 240000, vendor: 'Google Ads', date: '2026-10-21', status: 'Paid', paymentMethod: 'bKash / Bank' },
+      { id: 'exp-4', category: 'Office', desc: 'Studio High-Speed Fiber Internet', amount: 18000, vendor: 'Dot Internet BD', date: '2026-10-22', status: 'Pending', paymentMethod: 'bKash / Mobile Billing' },
+      { id: 'exp-5', category: 'Hardware', desc: 'Apple Mac Studio M3 Upgrade', amount: 399000, vendor: 'Apple Authorized Reseller', date: '2026-10-24', status: 'Paid', paymentMethod: 'Bank Wire' },
+    ];
+  });
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('crafvanta_expenses', JSON.stringify(expenseLogs));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [expenseLogs]);
+
+  // Expenses Filters & Modal State
+  const [expenseSearch, setExpenseSearch] = useState('');
+  const [expenseCategoryFilter, setExpenseCategoryFilter] = useState('All');
+  const [expenseStatusFilter, setExpenseStatusFilter] = useState('All');
+  const [isNewExpenseOpen, setIsNewExpenseOpen] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<{
+    id: string;
+    category: string;
+    desc: string;
+    amount: number;
+    vendor: string;
+    date: string;
+    status: string;
+    paymentMethod?: string;
+  } | null>(null);
+
+  const [expenseFormData, setExpenseFormData] = useState({
+    desc: '',
+    category: 'Infrastructure',
+    amount: 25000,
+    vendor: '',
+    date: new Date().toISOString().split('T')[0],
+    status: 'Paid',
+    paymentMethod: 'Corporate Card',
+  });
+
+  const filteredExpenseLogs = useMemo(() => {
+    return expenseLogs.filter((exp) => {
+      const matchesCategory =
+        expenseCategoryFilter === 'All' || exp.category === expenseCategoryFilter;
+      const matchesStatus =
+        expenseStatusFilter === 'All' || exp.status === expenseStatusFilter;
+      const q = expenseSearch.toLowerCase();
+      const matchesSearch =
+        !q ||
+        exp.desc.toLowerCase().includes(q) ||
+        exp.vendor.toLowerCase().includes(q) ||
+        exp.category.toLowerCase().includes(q) ||
+        (exp.paymentMethod && exp.paymentMethod.toLowerCase().includes(q));
+      return matchesCategory && matchesStatus && matchesSearch;
+    });
+  }, [expenseLogs, expenseCategoryFilter, expenseStatusFilter, expenseSearch]);
+
+  const handleOpenNewExpenseModal = () => {
+    setEditingExpense(null);
+    setExpenseFormData({
+      desc: '',
+      category: 'Infrastructure',
+      amount: 25000,
+      vendor: '',
+      date: new Date().toISOString().split('T')[0],
+      status: 'Paid',
+      paymentMethod: 'Corporate Card',
+    });
+    setIsNewExpenseOpen(true);
+  };
+
+  const handleOpenEditExpenseModal = (exp: typeof expenseLogs[0]) => {
+    setEditingExpense(exp);
+    setExpenseFormData({
+      desc: exp.desc,
+      category: exp.category,
+      amount: exp.amount,
+      vendor: exp.vendor,
+      date: exp.date,
+      status: exp.status,
+      paymentMethod: exp.paymentMethod || 'Corporate Card',
+    });
+    setIsNewExpenseOpen(true);
+  };
+
+  const handleSaveExpense = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!expenseFormData.desc.trim() || Number(expenseFormData.amount) <= 0) {
+      showToast('Please provide valid expense description and amount');
+      return;
+    }
+
+    const vendor = expenseFormData.vendor.trim() || 'Direct Vendor';
+
+    if (editingExpense) {
+      setExpenseLogs((prev) =>
+        prev.map((exp) =>
+          exp.id === editingExpense.id
+            ? {
+                ...exp,
+                desc: expenseFormData.desc.trim(),
+                category: expenseFormData.category,
+                amount: Number(expenseFormData.amount),
+                vendor,
+                date: expenseFormData.date,
+                status: expenseFormData.status,
+                paymentMethod: expenseFormData.paymentMethod,
+              }
+            : exp
+        )
+      );
+      showToast(`Updated expense: ${expenseFormData.desc}`);
+    } else {
+      const newExp = {
+        id: `exp-${Date.now()}`,
+        desc: expenseFormData.desc.trim(),
+        category: expenseFormData.category,
+        amount: Number(expenseFormData.amount),
+        vendor,
+        date: expenseFormData.date,
+        status: expenseFormData.status,
+        paymentMethod: expenseFormData.paymentMethod,
+      };
+      setExpenseLogs((prev) => [newExp, ...prev]);
+      showToast(`Logged expense: ৳${newExp.amount.toLocaleString()} BDT`);
+    }
+
+    setIsNewExpenseOpen(false);
+    setEditingExpense(null);
+  };
+
+  const handleDeleteExpense = (expId: string, desc: string) => {
+    setExpenseLogs((prev) => prev.filter((e) => e.id !== expId));
+    showToast(`Removed expense: ${desc}`);
+  };
 
   const filteredMediaAssets = useMemo(() => {
     return mediaAssets.filter((item) => {
@@ -683,21 +1139,70 @@ export default function AdminPanel({
   // Login handler
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (adminEmail.trim() && (adminPassword === 'admin123' || adminPassword === 'admin' || adminPassword === '')) {
+    const enteredEmail = adminEmail.trim().toLowerCase();
+    const targetEmail = (savedCredentials.email || 'arashik3456@gmail.com').trim().toLowerCase();
+
+    // Check if email is valid (matches user email arashik3456@gmail.com or admin default)
+    const isEmailValid =
+      enteredEmail === targetEmail ||
+      enteredEmail === 'arashik3456@gmail.com' ||
+      enteredEmail === 'admin@crafvantamedia.com';
+
+    // Accepted passwords: saved password, common defaults (admin123, 123456, arashik123, crafvanta2026), or empty for quick test
+    const isPasswordValid =
+      adminPassword === savedCredentials.password ||
+      adminPassword === 'admin123' ||
+      adminPassword === '123456' ||
+      adminPassword === 'arashik123' ||
+      adminPassword === 'crafvanta2026';
+
+    if (isEmailValid && isPasswordValid) {
       setIsAuthenticated(true);
       localStorage.setItem('crafvanta_admin_auth', 'true');
       setAuthError('');
-      showToast('Welcome to Crafvanta Media Admin');
+      setAuthSuccess('');
+      showToast(`Welcome back, ${adminEmail}!`);
+    } else if (!isEmailValid) {
+      setAuthError(`Email "${adminEmail}" is not recognized. Please use ${savedCredentials.email}`);
     } else {
-      setAuthError('Invalid credentials. (Hint: Try demo login or password: admin123)');
+      setAuthError('Incorrect password. Default: admin123 or 123456, or click "Set Custom Password" below.');
     }
+  };
+
+  const handleSetNewPassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPasswordInput || newPasswordInput.length < 4) {
+      setAuthError('Password must be at least 4 characters.');
+      setAuthSuccess('');
+      return;
+    }
+    if (newPasswordInput !== confirmPasswordInput) {
+      setAuthError('Passwords do not match.');
+      setAuthSuccess('');
+      return;
+    }
+
+    const updated = {
+      email: adminEmail.trim() || 'arashik3456@gmail.com',
+      password: newPasswordInput,
+    };
+    setSavedCredentials(updated);
+    localStorage.setItem('crafvanta_admin_credentials', JSON.stringify(updated));
+    setAdminPassword(newPasswordInput);
+    setNewPasswordInput('');
+    setConfirmPasswordInput('');
+    setAuthError('');
+    setAuthSuccess(`Password updated successfully! You can now sign in with your new password.`);
+    setAuthMode('login');
+    showToast(`Password updated for ${updated.email}`);
   };
 
   const handleQuickDemoLogin = () => {
     setIsAuthenticated(true);
     localStorage.setItem('crafvanta_admin_auth', 'true');
     setAuthError('');
-    showToast('Signed in as Crafvanta Super Admin');
+    setAuthSuccess('');
+    showToast(`Signed in as ${savedCredentials.email || 'arashik3456@gmail.com'}`);
   };
 
   const handleLogout = () => {
@@ -856,11 +1361,11 @@ export default function AdminPanel({
       id: `c-${Date.now()}`,
       name: newClient.name,
       sub: newClient.sub || 'Client Partner',
-      color: newClient.color || 'bg-blue-50 text-blue-900 border-blue-200',
+      color: newClient.color || 'bg-emerald-50 text-emerald-900 border-emerald-200',
     };
     setClients([...clients, client]);
     setIsNewClientOpen(false);
-    setNewClient({ name: '', sub: '', color: 'bg-blue-50 text-blue-900 border-blue-200' });
+    setNewClient({ name: '', sub: '', color: 'bg-emerald-50 text-emerald-900 border-emerald-200' });
     showToast('Client brand added');
   };
 
@@ -912,87 +1417,230 @@ export default function AdminPanel({
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl relative"
+            className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl relative"
           >
             {/* Close / Return to Site */}
             <button
               onClick={onClose}
-              className="absolute top-6 right-6 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+              className="absolute top-6 right-6 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-sm font-bold"
+              title="Close and return to site"
             >
               ✕
             </button>
 
             {/* Logo */}
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-slate-950 dark:bg-white flex items-center justify-center text-white dark:text-slate-950">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-xl bg-slate-950 dark:bg-white flex items-center justify-center text-white dark:text-slate-950 shadow-sm">
                 <span className="font-extrabold text-xl tracking-tighter">C</span>
               </div>
               <div>
                 <span className="text-base font-black tracking-widest text-slate-900 dark:text-white uppercase leading-none block">
                   CRAFVANTA
                 </span>
-                <span className="text-[10px] font-bold tracking-[0.25em] text-blue-600 dark:text-blue-400 uppercase leading-tight">
-                  ADMIN PORTAL
+                <span className="text-[10px] font-bold tracking-[0.25em] text-emerald-600 dark:text-emerald-400 uppercase leading-tight">
+                  ADMIN LOGIN PANEL
                 </span>
               </div>
             </div>
 
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">
-              Admin Authentication
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
-              Manage client inquiries, services, portfolio, and settings for Crafvanta Media.
-            </p>
+            {/* Authorized User Badge */}
+            <div className="mb-5 p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200/80 dark:border-emerald-900/60 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                <div className="truncate">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Authorized Administrator</span>
+                  <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 font-mono truncate">{savedCredentials.email || 'arashik3456@gmail.com'}</span>
+                </div>
+              </div>
+              <span className="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-md shrink-0">
+                Active
+              </span>
+            </div>
 
+            {/* Mode Selector Tabs (Sign In / Set Password) */}
+            <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl mb-5">
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode('login');
+                  setAuthError('');
+                  setAuthSuccess('');
+                }}
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  authMode === 'login'
+                    ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode('reset');
+                  setAuthError('');
+                  setAuthSuccess('');
+                }}
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  authMode === 'reset'
+                    ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                Set / Change Password
+              </button>
+            </div>
+
+            {/* Error Notification */}
             {authError && (
-              <div className="mb-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-300 text-xs">
-                {authError}
+              <div className="mb-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-300 text-xs flex items-start gap-2">
+                <span className="text-sm shrink-0">⚠️</span>
+                <span>{authError}</span>
               </div>
             )}
 
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Admin Email
-                </label>
-                <input
-                  type="email"
-                  value={adminEmail}
-                  onChange={(e) => setAdminEmail(e.target.value)}
-                  placeholder="admin@crafvantamedia.com"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-blue-600 transition-colors"
-                  required
-                />
+            {/* Success Notification */}
+            {authSuccess && (
+              <div className="mb-4 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-900/60 text-emerald-700 dark:text-emerald-300 text-xs flex items-start gap-2">
+                <span className="text-sm shrink-0">✓</span>
+                <span>{authSuccess}</span>
               </div>
+            )}
 
-              <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  value={adminPassword}
-                  onChange={(e) => setAdminPassword(e.target.value)}
-                  placeholder="admin123"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-blue-600 transition-colors"
-                />
-              </div>
+            {/* TAB 1: SIGN IN FORM */}
+            {authMode === 'login' ? (
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                    Admin Email Address
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="email"
+                      value={adminEmail}
+                      onChange={(e) => setAdminEmail(e.target.value)}
+                      placeholder="arashik3456@gmail.com"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-emerald-600 transition-colors shadow-xs"
+                      required
+                    />
+                    <span className="absolute right-3 top-2.5 text-xs text-slate-400">✉️</span>
+                  </div>
+                </div>
 
-              <button
-                type="submit"
-                className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition-all cursor-pointer"
-              >
-                Sign In to Dashboard
-              </button>
-            </form>
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      Password
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setAuthMode('reset')}
+                      className="text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
+                    >
+                      Set new password?
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={adminPassword}
+                      onChange={(e) => setAdminPassword(e.target.value)}
+                      placeholder="Enter your password (e.g. admin123)"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-emerald-600 transition-colors shadow-xs pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs cursor-pointer"
+                      title={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? '👁️' : '🔒'}
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Default password: <strong className="text-slate-600 dark:text-slate-300 font-mono">admin123</strong> or <strong className="text-slate-600 dark:text-slate-300 font-mono">123456</strong>
+                  </p>
+                </div>
 
-            <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
+                <button
+                  type="submit"
+                  className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-500/25 transition-all cursor-pointer flex items-center justify-center gap-1.5 hover:scale-[1.01]"
+                >
+                  <span>Sign In as arashik3456@gmail.com</span>
+                  <span>→</span>
+                </button>
+              </form>
+            ) : (
+              /* TAB 2: SET / RESET PASSWORD FORM */
+              <form onSubmit={handleSetNewPassword} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+                    Email Account
+                  </label>
+                  <input
+                    type="email"
+                    value={adminEmail}
+                    onChange={(e) => setAdminEmail(e.target.value)}
+                    placeholder="arashik3456@gmail.com"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-emerald-600"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    value={newPasswordInput}
+                    onChange={(e) => setNewPasswordInput(e.target.value)}
+                    placeholder="Enter your new secret password"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-emerald-600"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+                    Confirm New Password
+                  </label>
+                  <input
+                    type="password"
+                    value={confirmPasswordInput}
+                    onChange={(e) => setConfirmPasswordInput(e.target.value)}
+                    placeholder="Re-enter your new password"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:border-emerald-600"
+                    required
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setAuthMode('login')}
+                    className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-500/20 transition-all cursor-pointer"
+                  >
+                    Save Password
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Bottom Utilities */}
+            <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
               <button
                 type="button"
                 onClick={handleQuickDemoLogin}
                 className="w-full py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800/80 text-emerald-700 dark:text-emerald-300 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
               >
-                <span>⚡ Quick 1-Click Demo Login</span>
+                <span>⚡ Quick 1-Click Login (arashik3456@gmail.com)</span>
               </button>
               <button
                 type="button"
@@ -1005,6 +1653,7 @@ export default function AdminPanel({
           </motion.div>
         </div>
       ) : (
+
         /* Full Authenticated Admin Dashboard Workspace */
         <div className="h-full w-full bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 flex flex-col overflow-hidden">
           {/* Top Navigation Bar */}
@@ -1189,7 +1838,7 @@ export default function AdminPanel({
                 <button
                   onClick={() => setCurrentTab('dashboard')}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
-                    currentTab === 'dashboard' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    currentTab === 'dashboard' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   <span>📊 Agency Dashboard</span>
@@ -1198,7 +1847,7 @@ export default function AdminPanel({
                 <button
                   onClick={() => setCurrentTab('leads')}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
-                    currentTab === 'leads' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    currentTab === 'leads' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   <span>📋 Leads CRM</span>
@@ -1208,7 +1857,7 @@ export default function AdminPanel({
                 <button
                   onClick={() => setCurrentTab('services')}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
-                    currentTab === 'services' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    currentTab === 'services' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   <span>🚀 Services ({services.length})</span>
@@ -1217,7 +1866,7 @@ export default function AdminPanel({
                 <button
                   onClick={() => setCurrentTab('portfolio')}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
-                    currentTab === 'portfolio' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    currentTab === 'portfolio' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   <span>🎨 Portfolio Work</span>
@@ -1226,7 +1875,7 @@ export default function AdminPanel({
                 <button
                   onClick={() => setCurrentTab('clients')}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
-                    currentTab === 'clients' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    currentTab === 'clients' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   <span>⭐ Client Brands</span>
@@ -1235,7 +1884,7 @@ export default function AdminPanel({
                 <button
                   onClick={() => setCurrentTab('seo')}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
-                    currentTab === 'seo' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    currentTab === 'seo' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   <span>🔍 SEO Metadata</span>
@@ -1244,7 +1893,7 @@ export default function AdminPanel({
                 <button
                   onClick={() => setCurrentTab('settings')}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
-                    currentTab === 'settings' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    currentTab === 'settings' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   <span>⚙️ Agency Settings</span>
@@ -1406,7 +2055,7 @@ export default function AdminPanel({
                               <div className="pt-4 flex gap-3">
                                 <button
                                   onClick={() => handleStatusChange(lead.id, 'Contacted')}
-                                  className="px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-sm cursor-pointer"
+                                  className="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold shadow-sm cursor-pointer"
                                 >
                                   Mark Contacted
                                 </button>
@@ -1623,7 +2272,7 @@ export default function AdminPanel({
                                         <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">
                                           {slide.title}
                                         </h4>
-                                        <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60 shrink-0">
+                                        <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60 shrink-0">
                                           {slide.tabName}
                                         </span>
                                       </div>
@@ -1652,7 +2301,7 @@ export default function AdminPanel({
                                     </button>
                                     <button
                                       onClick={() => handleOpenEditSlide(slide)}
-                                      className="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 hover:bg-blue-100 text-xs font-bold transition-colors cursor-pointer"
+                                      className="px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 text-xs font-bold transition-colors cursor-pointer"
                                       title="Edit slide"
                                     >
                                       ✏️ Edit
@@ -1932,7 +2581,7 @@ export default function AdminPanel({
                                     </div>
 
                                     <div className="flex items-center justify-between mb-1">
-                                      <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded">
+                                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded">
                                         {srv.category}
                                       </span>
                                       <label className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 cursor-pointer">
@@ -2189,7 +2838,7 @@ export default function AdminPanel({
                                       </div>
                                     </div>
 
-                                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400">
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400">
                                       {vid.category}
                                     </span>
                                     <h4 className="text-sm font-bold text-slate-900 dark:text-white mt-2">
@@ -2206,7 +2855,7 @@ export default function AdminPanel({
                                   </div>
 
                                   <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                                    <label className="text-[11px] font-semibold text-blue-500 hover:text-blue-700 cursor-pointer">
+                                    <label className="text-[11px] font-semibold text-emerald-500 hover:text-emerald-700 cursor-pointer">
                                       <span>📷 Change Thumbnail</span>
                                       <input
                                         type="file"
@@ -2584,7 +3233,7 @@ export default function AdminPanel({
                       <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
                         NEXT SCHEDULED PAYDAY
                       </span>
-                      <div className="text-3xl font-black text-blue-600 dark:text-blue-400">
+                      <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400">
                         Nov 01
                       </div>
                       <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-2">
@@ -2708,7 +3357,7 @@ export default function AdminPanel({
                                       ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-800'
                                       : rec.status === 'Pending'
                                       ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800'
-                                      : 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/80 dark:text-blue-300 dark:border-blue-800'
+                                      : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-800'
                                   }`}
                                 >
                                   <option value="Paid">Paid</option>
@@ -2741,7 +3390,7 @@ export default function AdminPanel({
                                       });
                                       setIsNewPayrollOpen(true);
                                     }}
-                                    className="p-1 rounded text-slate-400 hover:text-blue-600 cursor-pointer"
+                                    className="p-1 rounded text-slate-400 hover:text-emerald-600 cursor-pointer"
                                     title="Edit Record"
                                   >
                                     ✏️
@@ -2794,11 +3443,11 @@ export default function AdminPanel({
                       <div key={del.id} className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
                         <div>
                           <div className="flex items-center justify-between mb-3">
-                            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
                               {del.client}
                             </span>
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                              del.status === 'Delivered' ? 'bg-emerald-100 text-emerald-800' : del.status === 'In QA' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'
+                              del.status === 'Delivered' ? 'bg-emerald-100 text-emerald-800' : del.status === 'In QA' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
                             }`}>
                               {del.status}
                             </span>
@@ -2833,69 +3482,236 @@ export default function AdminPanel({
               {/* TAB: TASKS */}
               {currentTab === 'tasks' && (
                 <div className="space-y-6 max-w-7xl mx-auto">
-                  <div className="flex items-center justify-between">
+                  {/* Top Header & Actions */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                      <h1 className="text-2xl font-black text-slate-900 dark:text-white">Agency Task Board</h1>
-                      <p className="text-xs text-slate-500">Task assignments, priorities, and workflow progress.</p>
+                      <div className="flex items-center gap-2">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                          Workflow Hub
+                        </span>
+                        <h1 className="text-2xl font-black text-slate-900 dark:text-white">Agency Task Board</h1>
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        Task assignments, team priorities, search & filter, and real-time project progress.
+                      </p>
                     </div>
+
                     <button
-                      onClick={() => {
-                        const title = prompt('Enter new task name:');
-                        if (title) {
-                          setTasks((prev) => [...prev, { id: `t-${Date.now()}`, title, assignee: 'Tanvir Ahmed', priority: 'Medium', status: 'In Progress', tag: 'Engineering' }]);
-                          showToast('Task added to agency board');
-                        }
-                      }}
-                      className="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold shadow-md cursor-pointer"
+                      onClick={handleOpenNewTaskModal}
+                      className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md cursor-pointer transition-all flex items-center gap-1.5 self-start sm:self-auto"
                     >
-                      + Create Task
+                      <span>+ Create Task</span>
                     </button>
                   </div>
 
-                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {tasks.map((t) => (
-                      <div key={t.id} className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                              {t.tag}
-                            </span>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                              t.priority === 'High' ? 'bg-rose-100 text-rose-800' : 'bg-blue-100 text-blue-800'
-                            }`}>
-                              {t.priority}
-                            </span>
-                          </div>
-                          <h4 className="font-bold text-xs text-slate-900 dark:text-white mb-2">{t.title}</h4>
-                          <div className="text-[11px] text-slate-400">👤 {t.assignee}</div>
-                        </div>
-                        <div className="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                          <select
-                            value={t.status}
-                            onChange={(e) => {
-                              const ns = e.target.value;
-                              setTasks((prev) => prev.map((x) => x.id === t.id ? { ...x, status: ns } : x));
-                              showToast(`Task updated to ${ns}`);
-                            }}
-                            className="text-[10px] font-bold px-2 py-1 rounded border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
-                          >
-                            <option value="To Do">To Do</option>
-                            <option value="In Progress">In Progress</option>
-                            <option value="Completed">Completed</option>
-                          </select>
-                          <button
-                            onClick={() => {
-                              setTasks((prev) => prev.filter((x) => x.id !== t.id));
-                              showToast('Task removed');
-                            }}
-                            className="text-slate-400 hover:text-rose-600 text-xs cursor-pointer"
-                          >
-                            🗑️
-                          </button>
-                        </div>
+                  {/* Task Metrics Summary Cards */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                        TOTAL TASKS
+                      </span>
+                      <div className="text-2xl font-black text-slate-900 dark:text-white">
+                        {tasks.length}
                       </div>
-                    ))}
+                      <div className="text-[11px] text-slate-500 mt-1 font-medium">
+                        Across all departments
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                        TO DO
+                      </span>
+                      <div className="text-2xl font-black text-amber-600 dark:text-amber-400">
+                        {tasks.filter((t) => t.status === 'To Do').length}
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-1 font-medium">
+                        Pending assignment start
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                        IN PROGRESS
+                      </span>
+                      <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                        {tasks.filter((t) => t.status === 'In Progress').length}
+                      </div>
+                      <div className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 font-medium">
+                        Active engineering & design
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                        COMPLETED
+                      </span>
+                      <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                        {tasks.filter((t) => t.status === 'Completed').length}
+                      </div>
+                      <div className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 font-medium">
+                        Delivered successfully
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Search and Filters Bar */}
+                  <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                      <div className="w-full sm:w-80">
+                        <input
+                          type="text"
+                          value={taskSearch}
+                          onChange={(e) => setTaskSearch(e.target.value)}
+                          placeholder="Search tasks, assignees, or details..."
+                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+                        <span className="text-[11px] font-bold text-slate-400 mr-1 shrink-0">Status:</span>
+                        {['All', 'To Do', 'In Progress', 'Completed'].map((st) => (
+                          <button
+                            key={st}
+                            onClick={() => setTaskStatusFilter(st)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                              taskStatusFilter === st
+                                ? 'bg-emerald-600 text-white shadow-xs'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                            }`}
+                          >
+                            {st}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 overflow-x-auto pt-1 border-t border-slate-100 dark:border-slate-800/80">
+                      <span className="text-[11px] font-bold text-slate-400 mr-1 shrink-0">Tag:</span>
+                      {['All', 'Engineering', 'Design', 'Video', 'Marketing', 'Enterprise', 'Operations'].map((tag) => (
+                        <button
+                          key={tag}
+                          onClick={() => setTaskTagFilter(tag)}
+                          className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                            taskTagFilter === tag
+                              ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-bold'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                          }`}
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Tasks List / Grid */}
+                  {filteredTasks.length === 0 ? (
+                    <div className="p-12 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                      <div className="text-3xl mb-2">📋</div>
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-white">No tasks match your criteria</h3>
+                      <p className="text-xs text-slate-400 mt-1 mb-4">Try clearing your filters or create a new task.</p>
+                      <button
+                        onClick={handleOpenNewTaskModal}
+                        className="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold shadow-md cursor-pointer"
+                      >
+                        + Create Task
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {filteredTasks.map((t) => (
+                        <div
+                          key={t.id}
+                          className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-emerald-500/40 transition-all flex flex-col justify-between group"
+                        >
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                {t.tag}
+                              </span>
+                              <span
+                                className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                                  t.priority === 'High'
+                                    ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
+                                    : t.priority === 'Medium'
+                                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                                    : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                                }`}
+                              >
+                                {t.priority}
+                              </span>
+                            </div>
+
+                            <h4 className="font-bold text-xs text-slate-900 dark:text-white mb-1.5 line-clamp-2" title={t.title}>
+                              {t.title}
+                            </h4>
+
+                            {t.description && (
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 mb-3">
+                                {t.description}
+                              </p>
+                            )}
+
+                            <div className="space-y-1 mt-2 text-[11px] text-slate-400 border-t border-slate-100 dark:border-slate-800/80 pt-2">
+                              <div className="flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-300">
+                                <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] flex items-center justify-center shrink-0">
+                                  {t.assignee.charAt(0).toUpperCase()}
+                                </span>
+                                <span className="truncate">{t.assignee}</span>
+                              </div>
+
+                              {t.dueDate && (
+                                <div className="text-[10px] text-slate-400 flex items-center gap-1">
+                                  <span>📅 Due: {t.dueDate}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                            <select
+                              value={t.status}
+                              onChange={(e) => {
+                                const ns = e.target.value;
+                                setTasks((prev) =>
+                                  prev.map((x) => (x.id === t.id ? { ...x, status: ns } : x))
+                                );
+                                showToast(`Task updated to ${ns}`);
+                              }}
+                              className={`text-[10px] font-extrabold px-2 py-1 rounded border border-slate-200 dark:border-slate-800 cursor-pointer ${
+                                t.status === 'Completed'
+                                  ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                                  : t.status === 'In Progress'
+                                  ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                                  : 'bg-slate-50 text-slate-700 dark:bg-slate-950 dark:text-slate-300'
+                              }`}
+                            >
+                              <option value="To Do">To Do</option>
+                              <option value="In Progress">In Progress</option>
+                              <option value="Completed">Completed</option>
+                            </select>
+
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => handleOpenEditTaskModal(t)}
+                                className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white text-xs cursor-pointer transition-colors"
+                                title="Edit Task"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                onClick={() => handleDeleteTask(t.id, t.title)}
+                                className="p-1 rounded hover:bg-rose-50 dark:hover:bg-rose-950/50 text-slate-400 hover:text-rose-600 text-xs cursor-pointer transition-colors"
+                                title="Delete Task"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -2939,96 +3755,389 @@ export default function AdminPanel({
               {/* TAB: EMPLOYEES */}
               {currentTab === 'employees' && (
                 <div className="space-y-6 max-w-7xl mx-auto">
-                  <div className="flex items-center justify-between">
+                  {/* Top Header & Actions */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                      <h1 className="text-2xl font-black text-slate-900 dark:text-white">Employee Roster</h1>
-                      <p className="text-xs text-slate-500">Agency personnel directory, roles, and contacts.</p>
+                      <div className="flex items-center gap-2">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                          Personnel Directory
+                        </span>
+                        <h1 className="text-2xl font-black text-slate-900 dark:text-white">Employee Roster</h1>
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        Agency personnel directory, roles, departments, and contact details.
+                      </p>
                     </div>
+
                     <button
-                      onClick={() => {
-                        const name = prompt('Employee Name:');
-                        if (name) {
-                          setEmployeeList((prev) => [...prev, { id: `e-${Date.now()}`, name, role: 'Specialist', email: `${name.toLowerCase().replace(/\s+/g, '')}@crafvanta.com`, department: 'Engineering', phone: '+880 1700 000000', status: 'Active' }]);
-                          showToast(`Added ${name} to team roster`);
-                        }
-                      }}
-                      className="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold shadow-md cursor-pointer"
+                      onClick={handleOpenNewEmployeeModal}
+                      className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md cursor-pointer transition-all flex items-center gap-1.5 self-start sm:self-auto"
                     >
-                      + Add Team Member
+                      <span>+ Add Team Member</span>
                     </button>
                   </div>
 
-                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {employeeList.map((emp) => (
-                      <div key={emp.id} className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between text-center">
-                        <div>
-                          <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-600 font-bold mx-auto flex items-center justify-center text-sm mb-3">
-                            {emp.name.substring(0, 2).toUpperCase()}
-                          </div>
-                          <h3 className="font-bold text-sm text-slate-900 dark:text-white">{emp.name}</h3>
-                          <div className="text-xs text-slate-400 font-medium mt-0.5">{emp.role}</div>
-                          <span className="inline-block mt-2 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                            {emp.department}
-                          </span>
-                        </div>
-                        <div className="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-400">
-                          <div>📧 {emp.email}</div>
-                          <div>📞 {emp.phone}</div>
-                        </div>
+                  {/* Metrics Row */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                        TOTAL TEAM
+                      </span>
+                      <div className="text-2xl font-black text-slate-900 dark:text-white">
+                        {employeeList.length}
                       </div>
-                    ))}
+                      <div className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 font-medium">
+                        Active staff members
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                        ENGINEERING
+                      </span>
+                      <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                        {employeeList.filter((e) => e.department === 'Engineering').length}
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-1 font-medium">
+                        Architects & Developers
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                        CREATIVE & DESIGN
+                      </span>
+                      <div className="text-2xl font-black text-indigo-600 dark:text-indigo-400">
+                        {employeeList.filter((e) => e.department === 'Creative' || e.department === 'Design').length}
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-1 font-medium">
+                        UI/UX & Motion
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                        MARKETING & OPS
+                      </span>
+                      <div className="text-2xl font-black text-amber-600 dark:text-amber-400">
+                        {employeeList.filter((e) => e.department === 'Marketing' || e.department === 'Operations').length}
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-1 font-medium">
+                        Growth & Success
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Search and Filters Bar */}
+                  <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div className="w-full sm:w-80">
+                      <input
+                        type="text"
+                        value={employeeSearch}
+                        onChange={(e) => setEmployeeSearch(e.target.value)}
+                        placeholder="Search team by name, role, or email..."
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+                      <span className="text-[11px] font-bold text-slate-400 mr-1 shrink-0">Dept:</span>
+                      {['All', 'Engineering', 'Creative', 'Marketing', 'Operations', 'Management'].map((dept) => (
+                        <button
+                          key={dept}
+                          onClick={() => setEmployeeDepartmentFilter(dept)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                            employeeDepartmentFilter === dept
+                              ? 'bg-emerald-600 text-white shadow-xs'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                          }`}
+                        >
+                          {dept}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Employee Cards Grid */}
+                  {filteredEmployees.length === 0 ? (
+                    <div className="p-12 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                      <div className="text-3xl mb-2">👤</div>
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-white">No team members match your filter</h3>
+                      <p className="text-xs text-slate-400 mt-1 mb-4">Try clearing search or add a new team member.</p>
+                      <button
+                        onClick={handleOpenNewEmployeeModal}
+                        className="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold shadow-md cursor-pointer"
+                      >
+                        + Add Team Member
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {filteredEmployees.map((emp) => (
+                        <div key={emp.id} className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between text-center relative group hover:border-emerald-500/40 transition-all">
+                          <div>
+                            {/* Avatar */}
+                            {emp.avatarUrl ? (
+                              <img
+                                src={emp.avatarUrl}
+                                alt={emp.name}
+                                className="w-14 h-14 rounded-full mx-auto object-cover border-2 border-emerald-500/30 mb-3 shadow-sm"
+                              />
+                            ) : (
+                              <div className="w-14 h-14 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold mx-auto flex items-center justify-center text-base mb-3 border border-emerald-500/20">
+                                {emp.name.substring(0, 2).toUpperCase()}
+                              </div>
+                            )}
+
+                            <h3 className="font-bold text-sm text-slate-900 dark:text-white">{emp.name}</h3>
+                            <div className="text-xs text-slate-400 font-medium mt-0.5">{emp.role}</div>
+                            
+                            <div className="mt-2.5 flex items-center justify-center gap-2">
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                {emp.department}
+                              </span>
+                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                                emp.status === 'Active' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                              }`}>
+                                {emp.status}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="pt-3 mt-4 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-400 space-y-1">
+                            <div className="truncate" title={emp.email}>📧 {emp.email}</div>
+                            <div>📞 {emp.phone}</div>
+
+                            <div className="pt-2 flex items-center justify-center gap-3">
+                              <button
+                                onClick={() => handleOpenEditEmployeeModal(emp)}
+                                className="text-xs text-slate-500 hover:text-emerald-600 font-bold cursor-pointer transition-colors"
+                              >
+                                ✏️ Edit
+                              </button>
+                              <span className="text-slate-200 dark:text-slate-800">•</span>
+                              <button
+                                onClick={() => handleDeleteEmployee(emp.id, emp.name)}
+                                className="text-xs text-slate-400 hover:text-rose-600 cursor-pointer transition-colors"
+                              >
+                                🗑️ Delete
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
               {/* TAB: EXPENSES */}
               {currentTab === 'expenses' && (
                 <div className="space-y-6 max-w-7xl mx-auto">
-                  <div className="flex items-center justify-between">
+                  {/* Top Header & Actions */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                      <h1 className="text-2xl font-black text-slate-900 dark:text-white">Expense Tracking & Billing</h1>
-                      <p className="text-xs text-slate-500">Operational costs, cloud hosting, ad spend, and software subscriptions.</p>
+                      <div className="flex items-center gap-2">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                          Financial Billing
+                        </span>
+                        <h1 className="text-2xl font-black text-slate-900 dark:text-white">
+                          Expense Tracking & Billing
+                        </h1>
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        Operational costs, cloud server hosting, ad spend, software licenses, and equipment expenses.
+                      </p>
                     </div>
+
                     <button
-                      onClick={() => {
-                        const desc = prompt('Expense description:');
-                        const amount = prompt('Amount ($):');
-                        if (desc && amount) {
-                          setExpenseLogs((prev) => [...prev, { id: `exp-${Date.now()}`, category: 'Operations', desc, amount: Number(amount), vendor: 'Direct Vendor', date: new Date().toISOString().split('T')[0], status: 'Paid' }]);
-                          showToast('Expense logged');
-                        }
-                      }}
-                      className="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold shadow-md cursor-pointer"
+                      onClick={handleOpenNewExpenseModal}
+                      className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md cursor-pointer transition-all flex items-center gap-1.5 self-start sm:self-auto"
                     >
-                      + Log New Expense
+                      <span>+ Log New Expense</span>
                     </button>
                   </div>
 
-                  <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs overflow-x-auto">
-                    <table className="w-full text-left border-collapse text-xs">
-                      <thead>
-                        <tr className="border-b border-slate-100 dark:border-slate-800 text-[10px] font-bold uppercase text-slate-400">
-                          <th className="pb-3">Description</th>
-                          <th className="pb-3">Category</th>
-                          <th className="pb-3">Vendor</th>
-                          <th className="pb-3">Date</th>
-                          <th className="pb-3">Amount</th>
-                          <th className="pb-3">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
-                        {expenseLogs.map((e) => (
-                          <tr key={e.id}>
-                            <td className="py-3 font-bold text-slate-900 dark:text-white">{e.desc}</td>
-                            <td className="py-3"><span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] font-bold">{e.category}</span></td>
-                            <td className="py-3 text-slate-500">{e.vendor}</td>
-                            <td className="py-3 text-slate-400">{e.date}</td>
-                            <td className="py-3 font-extrabold text-slate-900 dark:text-white">${e.amount.toLocaleString()} USD</td>
-                            <td className="py-3"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${e.status === 'Paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>{e.status}</span></td>
-                          </tr>
+                  {/* Expense Stats Bar */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                        TOTAL SPEND
+                      </span>
+                      <div className="text-2xl font-black text-slate-900 dark:text-white">
+                        ৳ {expenseLogs.reduce((acc, curr) => acc + curr.amount, 0).toLocaleString()} BDT
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-1 font-medium">
+                        {expenseLogs.length} logged records
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                        PAID EXPENSES
+                      </span>
+                      <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                        ৳ {expenseLogs.filter((e) => e.status === 'Paid').reduce((acc, curr) => acc + curr.amount, 0).toLocaleString()} BDT
+                      </div>
+                      <div className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 font-medium">
+                        Disbursed & settled
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                        PENDING BILLING
+                      </span>
+                      <div className="text-2xl font-black text-amber-600 dark:text-amber-400">
+                        ৳ {expenseLogs.filter((e) => e.status === 'Pending').reduce((acc, curr) => acc + curr.amount, 0).toLocaleString()} BDT
+                      </div>
+                      <div className="text-[11px] text-amber-600 dark:text-amber-400 mt-1 font-medium">
+                        Awaiting invoice settlement
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                        CLOUD & INFRA
+                      </span>
+                      <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                        ৳ {expenseLogs.filter((e) => e.category === 'Infrastructure').reduce((acc, curr) => acc + curr.amount, 0).toLocaleString()} BDT
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-1 font-medium">
+                        AWS, Vercel & Cloud
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Filter and Search Controls */}
+                  <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                      <div className="w-full sm:w-80">
+                        <input
+                          type="text"
+                          value={expenseSearch}
+                          onChange={(e) => setExpenseSearch(e.target.value)}
+                          placeholder="Search expenses by vendor, item, or payment method..."
+                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+                        <span className="text-[11px] font-bold text-slate-400 mr-1 shrink-0">Status:</span>
+                        {['All', 'Paid', 'Pending'].map((st) => (
+                          <button
+                            key={st}
+                            onClick={() => setExpenseStatusFilter(st)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                              expenseStatusFilter === st
+                                ? 'bg-emerald-600 text-white shadow-xs'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                            }`}
+                          >
+                            {st}
+                          </button>
                         ))}
-                      </tbody>
-                    </table>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 overflow-x-auto pt-1 border-t border-slate-100 dark:border-slate-800/80">
+                      <span className="text-[11px] font-bold text-slate-400 mr-1 shrink-0">Category:</span>
+                      {['All', 'Infrastructure', 'Software', 'Marketing', 'Hardware', 'Office', 'Operations'].map((cat) => (
+                        <button
+                          key={cat}
+                          onClick={() => setExpenseCategoryFilter(cat)}
+                          className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                            expenseCategoryFilter === cat
+                              ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-bold'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                          }`}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Expenses Table */}
+                  <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs overflow-x-auto">
+                    {filteredExpenseLogs.length === 0 ? (
+                      <div className="p-8 text-center">
+                        <div className="text-3xl mb-2">💸</div>
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">No expenses match your search</h3>
+                        <p className="text-xs text-slate-400 mt-1 mb-4">Try adjusting search query or filter options.</p>
+                        <button
+                          onClick={handleOpenNewExpenseModal}
+                          className="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold shadow-md cursor-pointer"
+                        >
+                          + Log New Expense
+                        </button>
+                      </div>
+                    ) : (
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                          <tr className="border-b border-slate-100 dark:border-slate-800 text-[10px] font-bold uppercase text-slate-400">
+                            <th className="pb-3">Description & Method</th>
+                            <th className="pb-3">Category</th>
+                            <th className="pb-3">Vendor</th>
+                            <th className="pb-3">Date</th>
+                            <th className="pb-3">Amount</th>
+                            <th className="pb-3">Status</th>
+                            <th className="pb-3 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                          {filteredExpenseLogs.map((e) => (
+                            <tr key={e.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/50 transition-colors">
+                              <td className="py-3.5">
+                                <div className="font-bold text-slate-900 dark:text-white">{e.desc}</div>
+                                {e.paymentMethod && (
+                                  <div className="text-[10px] text-slate-400 mt-0.5">💳 {e.paymentMethod}</div>
+                                )}
+                              </td>
+                              <td className="py-3.5">
+                                <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-700 dark:text-slate-300">
+                                  {e.category}
+                                </span>
+                              </td>
+                              <td className="py-3.5 text-slate-600 dark:text-slate-300 font-medium">{e.vendor}</td>
+                              <td className="py-3.5 text-slate-400">{e.date}</td>
+                              <td className="py-3.5 font-extrabold text-slate-900 dark:text-white text-sm">
+                                ৳ {e.amount.toLocaleString()} BDT
+                              </td>
+                              <td className="py-3.5">
+                                <span
+                                  className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                    e.status === 'Paid'
+                                      ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                                      : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                                  }`}
+                                >
+                                  {e.status}
+                                </span>
+                              </td>
+                              <td className="py-3.5 text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                  <button
+                                    onClick={() => handleOpenEditExpenseModal(e)}
+                                    className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-emerald-600 text-xs font-bold cursor-pointer transition-colors"
+                                    title="Edit Expense"
+                                  >
+                                    ✏️ Edit
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteExpense(e.id, e.desc)}
+                                    className="p-1 rounded hover:bg-rose-50 dark:hover:bg-rose-950/50 text-slate-400 hover:text-rose-600 text-xs cursor-pointer transition-colors"
+                                    title="Delete Expense"
+                                  >
+                                    🗑️ Delete
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
                   </div>
                 </div>
               )}
@@ -3080,7 +4189,7 @@ export default function AdminPanel({
                       <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
                         STORAGE USED
                       </span>
-                      <div className="text-3xl font-black text-blue-600 dark:text-blue-400">
+                      <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400">
                         28.4 MB
                       </div>
                       <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-2">
@@ -3174,7 +4283,7 @@ export default function AdminPanel({
                             </span>
                           </div>
 
-                          <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60">
+                          <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60">
                             {asset.category}
                           </span>
                           <h4 className="text-xs font-bold text-slate-900 dark:text-white mt-1.5 truncate" title={asset.name}>
@@ -3218,9 +4327,9 @@ export default function AdminPanel({
               {currentTab === 'dashboard' && (
                 <div className="space-y-6 max-w-6xl mx-auto">
                   {/* Banner */}
-                  <div className="p-6 rounded-3xl bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-950 text-white shadow-xl relative overflow-hidden">
+                  <div className="p-6 rounded-3xl bg-gradient-to-r from-emerald-950 via-indigo-900 to-slate-950 text-white shadow-xl relative overflow-hidden">
                     <div className="relative z-10">
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-blue-500/30 text-blue-200 border border-blue-400/30">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-emerald-500/30 text-emerald-200 border border-emerald-400/30">
                         Crafvanta Media Headquarters
                       </span>
                       <h1 className="text-2xl sm:text-3xl font-extrabold mt-2">
@@ -3230,7 +4339,7 @@ export default function AdminPanel({
                         Monitor incoming client inquiries, update active services, and customize your live web experience in real-time.
                       </p>
                     </div>
-                    <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
+                    <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
                   </div>
 
                   {/* 4 Metric KPI Cards */}
@@ -3238,7 +4347,7 @@ export default function AdminPanel({
                     <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
                       <div className="flex items-center justify-between text-slate-400 mb-2">
                         <span className="text-xs font-semibold">Total Inquiries</span>
-                        <span className="text-blue-500 font-bold">📋</span>
+                        <span className="text-emerald-500 font-bold">📋</span>
                       </div>
                       <div className="text-3xl font-black text-slate-900 dark:text-white">
                         {stats.total}
@@ -3301,7 +4410,7 @@ export default function AdminPanel({
                       </div>
                       <button
                         onClick={() => setCurrentTab('leads')}
-                        className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                        className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
                       >
                         View all leads →
                       </button>
@@ -3323,7 +4432,7 @@ export default function AdminPanel({
                                   lead.status === 'New'
                                     ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300'
                                     : lead.status === 'In Progress'
-                                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300'
+                                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300'
                                     : lead.status === 'Converted'
                                     ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300'
                                     : 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-300'
@@ -3390,7 +4499,7 @@ export default function AdminPanel({
                       </button>
                       <button
                         onClick={() => setIsNewLeadOpen(true)}
-                        className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition-all cursor-pointer flex items-center gap-1.5"
+                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-500/20 transition-all cursor-pointer flex items-center gap-1.5"
                       >
                         <span>+ Add Manual Lead</span>
                       </button>
@@ -3407,7 +4516,7 @@ export default function AdminPanel({
                           onClick={() => setStatusFilter(st)}
                           className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                             statusFilter === st
-                              ? 'bg-blue-600 text-white'
+                              ? 'bg-emerald-600 text-white'
                               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                           }`}
                         >
@@ -3423,7 +4532,7 @@ export default function AdminPanel({
                         value={leadSearch}
                         onChange={(e) => setLeadSearch(e.target.value)}
                         placeholder="Search by client, service, phone..."
-                        className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-600 transition-colors"
+                        className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-600 transition-colors"
                       />
                       <span className="absolute left-2.5 top-2 text-xs text-slate-400">🔍</span>
                     </div>
@@ -3439,7 +4548,7 @@ export default function AdminPanel({
                       filteredLeads.map((lead) => (
                         <div
                           key={lead.id}
-                          className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-blue-500/40 transition-colors"
+                          className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-emerald-500/40 transition-colors"
                         >
                           <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
                             {/* Lead Core Info */}
@@ -3448,7 +4557,7 @@ export default function AdminPanel({
                                 <span className="text-base font-bold text-slate-950 dark:text-white">
                                   {lead.name}
                                 </span>
-                                <span className="text-xs px-2.5 py-0.5 rounded-full font-bold bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                                <span className="text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                                   {lead.service}
                                 </span>
                                 {lead.budget && (
@@ -3489,7 +4598,7 @@ export default function AdminPanel({
                                   defaultValue={lead.notes || ''}
                                   onBlur={(e) => handleNoteUpdate(lead.id, e.target.value)}
                                   placeholder="e.g. Called client on Zoom, proposal sent, signed contract..."
-                                  className="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-transparent text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 transition-colors"
+                                  className="w-full px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-transparent text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-emerald-600 transition-colors"
                                 />
                               </div>
                             </div>
@@ -3505,7 +4614,7 @@ export default function AdminPanel({
                                   onChange={(e) =>
                                     handleStatusChange(lead.id, e.target.value as LeadInquiry['status'])
                                   }
-                                  className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer shadow-xs"
+                                  className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer shadow-xs"
                                 >
                                   <option value="New">New</option>
                                   <option value="In Progress">In Progress</option>
@@ -3520,7 +4629,7 @@ export default function AdminPanel({
                                 {lead.contact.includes('@') ? (
                                   <a
                                     href={`mailto:${lead.contact}`}
-                                    className="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 hover:bg-blue-100 text-xs font-semibold transition-colors"
+                                    className="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 text-xs font-semibold transition-colors"
                                   >
                                     ✉️ Email
                                   </a>
@@ -3577,7 +4686,7 @@ export default function AdminPanel({
                         });
                         setIsNewServiceOpen(true);
                       }}
-                      className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition-all cursor-pointer flex items-center gap-1.5"
+                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-500/20 transition-all cursor-pointer flex items-center gap-1.5"
                     >
                       <span>+ Create New Service</span>
                     </button>
@@ -3609,7 +4718,7 @@ export default function AdminPanel({
                           )}
 
                           <div className="flex items-center justify-between mb-3">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300">
                               {item.category}
                             </span>
                             <div className="flex items-center gap-1.5">
@@ -3620,7 +4729,7 @@ export default function AdminPanel({
                                 type="checkbox"
                                 checked={item.active}
                                 onChange={() => handleToggleService(item.id)}
-                                className="w-4 h-4 text-blue-600 rounded cursor-pointer"
+                                className="w-4 h-4 text-emerald-600 rounded cursor-pointer"
                               />
                             </div>
                           </div>
@@ -3654,7 +4763,7 @@ export default function AdminPanel({
                               });
                               setIsNewServiceOpen(true);
                             }}
-                            className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                            className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
                           >
                             Edit Details
                           </button>
@@ -3720,7 +4829,7 @@ export default function AdminPanel({
 
                         {/* Quick Photo update trigger in Admin */}
                         <div className="pt-3 mt-3 border-t border-white/10 flex items-center justify-between">
-                          <label className="text-[11px] font-semibold text-blue-300 hover:text-white flex items-center gap-1 cursor-pointer transition-colors">
+                          <label className="text-[11px] font-semibold text-emerald-300 hover:text-white flex items-center gap-1 cursor-pointer transition-colors">
                             <span>📷 Change Photo</span>
                             <input
                               type="file"
@@ -3764,7 +4873,7 @@ export default function AdminPanel({
 
                     <button
                       onClick={() => setIsNewClientOpen(true)}
-                      className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition-all cursor-pointer"
+                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-500/20 transition-all cursor-pointer"
                     >
                       + Add Client Brand
                     </button>
@@ -3836,7 +4945,7 @@ export default function AdminPanel({
 
                     <button
                       onClick={() => showToast('SEO settings updated')}
-                      className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md cursor-pointer"
+                      className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md cursor-pointer"
                     >
                       Save SEO Settings
                     </button>
@@ -3938,6 +5047,61 @@ export default function AdminPanel({
                             </button>
                           )}
                         </div>
+                      </div>
+                    </div>
+
+                    {/* Logo & Website Primary Theme Color Selector */}
+                    <div className="pt-5 border-t border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                          🎨 Website Theme Color (Matches Logo Brand Palette)
+                        </label>
+                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400">
+                          {settings.primaryColor || '#2563eb'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-3">
+                        Choose a color palette preset to automatically sync the header logo, CTA buttons, active links, glow effects, and accents across your entire website.
+                      </p>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                        {[
+                          { name: 'Electric Royal Blue', color: '#2563eb', badge: 'blue' },
+                          { name: 'Neon Deep Indigo', color: '#4f46e5', badge: 'indigo' },
+                          { name: 'Cyber Cyan Teal', color: '#0891b2', badge: 'cyan' },
+                          { name: 'Emerald Growth', color: '#059669', badge: 'emerald' },
+                          { name: 'Sunset Amber Gold', color: '#d97706', badge: 'amber' },
+                          { name: 'Crimson Power Red', color: '#dc2626', badge: 'rose' },
+                        ].map((preset) => {
+                          const isSelected = (settings.primaryColor || '#2563eb') === preset.color;
+                          return (
+                            <button
+                              key={preset.color}
+                              type="button"
+                              onClick={() => {
+                                setSettings((prev) => ({
+                                  ...prev,
+                                  primaryColor: preset.color,
+                                  logoBadgeColor: preset.badge,
+                                }));
+                                showToast(`Website theme color changed to ${preset.name}`);
+                              }}
+                              className={`p-2.5 rounded-xl border text-left flex items-center gap-2.5 transition-all cursor-pointer ${
+                                isSelected
+                                  ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-950 border-slate-900 dark:border-white shadow-md'
+                                  : 'bg-slate-50 dark:bg-slate-950/80 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-400'
+                              }`}
+                            >
+                              <span
+                                className="w-5 h-5 rounded-full shrink-0 shadow-xs border border-white/20"
+                                style={{ backgroundColor: preset.color }}
+                              />
+                              <div className="truncate">
+                                <span className="text-xs font-bold block truncate">{preset.name}</span>
+                              </div>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -4044,7 +5208,7 @@ export default function AdminPanel({
                       </div>
 
                       <div>
-                        <label className="block text-[11px] font-bold uppercase text-blue-600 dark:text-blue-400 mb-1">
+                        <label className="block text-[11px] font-bold uppercase text-emerald-600 dark:text-emerald-400 mb-1">
                           Bank Account Details (Name, Account No, Branch)
                         </label>
                         <textarea
@@ -4149,10 +5313,63 @@ export default function AdminPanel({
                       </div>
                     </div>
 
+                    {/* Admin Credentials & Security (arashik3456@gmail.com) */}
+                    <div className="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-4">
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                          <span>🔐 Admin Security & Login Credentials</span>
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                          Configure your master administrator login email and password used to unlock this panel.
+                        </p>
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3">
+                        <div className="grid sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">
+                              Master Login Email
+                            </label>
+                            <input
+                              type="email"
+                              value={savedCredentials.email}
+                              onChange={(e) => {
+                                const newCred = { ...savedCredentials, email: e.target.value };
+                                setSavedCredentials(newCred);
+                                localStorage.setItem('crafvanta_admin_credentials', JSON.stringify(newCred));
+                              }}
+                              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-mono font-bold text-slate-900 dark:text-white"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">
+                              Master Password
+                            </label>
+                            <input
+                              type="text"
+                              value={savedCredentials.password}
+                              onChange={(e) => {
+                                const newCred = { ...savedCredentials, password: e.target.value };
+                                setSavedCredentials(newCred);
+                                localStorage.setItem('crafvanta_admin_credentials', JSON.stringify(newCred));
+                              }}
+                              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-mono font-bold text-slate-900 dark:text-white"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
+                          <span>Authorized Account: <strong className="text-emerald-600 dark:text-emerald-400">{savedCredentials.email}</strong></span>
+                          <span className="text-emerald-500 font-bold">✓ Credentials Saved</span>
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="pt-2 flex justify-end">
                       <button
-                        onClick={() => showToast('Agency settings & Social links saved & live')}
-                        className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition-all cursor-pointer"
+                        onClick={() => showToast('Agency settings & credentials saved & live')}
+                        className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-500/20 transition-all cursor-pointer"
                       >
                         Save & Apply Changes
                       </button>
@@ -4160,6 +5377,7 @@ export default function AdminPanel({
                   </div>
                 </div>
               )}
+
             </div>
           </div>
         </div>
@@ -4270,7 +5488,7 @@ export default function AdminPanel({
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20"
+                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-500/20"
                   >
                     Save Lead
                   </button>
@@ -4428,7 +5646,7 @@ export default function AdminPanel({
                           key={idx}
                           type="button"
                           onClick={() => setServiceFormData({ ...serviceFormData, imageUrl: preset.url })}
-                          className="px-2 py-0.5 rounded-md text-[10px] bg-slate-100 hover:bg-blue-50 dark:bg-slate-800 dark:hover:bg-blue-950/60 text-slate-600 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 whitespace-nowrap transition-colors cursor-pointer border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
+                          className="px-2 py-0.5 rounded-md text-[10px] bg-slate-100 hover:bg-emerald-50 dark:bg-slate-800 dark:hover:bg-emerald-950/60 text-slate-600 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 whitespace-nowrap transition-colors cursor-pointer border border-transparent hover:border-emerald-200 dark:hover:border-emerald-800"
                         >
                           {preset.label}
                         </button>
@@ -4484,7 +5702,7 @@ export default function AdminPanel({
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20"
+                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-500/20"
                   >
                     Save Service
                   </button>
@@ -4554,7 +5772,7 @@ export default function AdminPanel({
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20"
+                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-500/20"
                   >
                     Add Brand
                   </button>
@@ -4737,6 +5955,343 @@ export default function AdminPanel({
         )}
       </AnimatePresence>
 
+      {/* MODAL: ADD / EDIT EXPENSE */}
+      <AnimatePresence>
+        {isNewExpenseOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-slate-200 dark:border-slate-800 shadow-2xl relative"
+            >
+              <button
+                onClick={() => setIsNewExpenseOpen(false)}
+                className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer text-sm font-bold w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center"
+              >
+                ✕
+              </button>
+
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">
+                {editingExpense ? 'Edit Expense Record' : 'Log New Agency Expense'}
+              </h2>
+              <p className="text-xs text-slate-500 mb-4">
+                Record operational costs, vendor billing, software subscriptions, or server spend.
+              </p>
+
+              <form onSubmit={handleSaveExpense} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Expense Description / Item *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={expenseFormData.desc}
+                    onChange={(e) =>
+                      setExpenseFormData({ ...expenseFormData, desc: e.target.value })
+                    }
+                    placeholder="e.g. AWS Cloud Server Hosting & CDN"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-medium"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Amount (৳ BDT) *
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      step="any"
+                      required
+                      value={expenseFormData.amount}
+                      onChange={(e) =>
+                        setExpenseFormData({ ...expenseFormData, amount: Number(e.target.value) })
+                      }
+                      placeholder="e.g. 25000"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-bold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Category
+                    </label>
+                    <select
+                      value={expenseFormData.category}
+                      onChange={(e) =>
+                        setExpenseFormData({ ...expenseFormData, category: e.target.value })
+                      }
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white cursor-pointer font-medium"
+                    >
+                      <option value="Infrastructure">Infrastructure</option>
+                      <option value="Software">Software</option>
+                      <option value="Marketing">Marketing</option>
+                      <option value="Hardware">Hardware</option>
+                      <option value="Office">Office</option>
+                      <option value="Operations">Operations</option>
+                      <option value="Utilities">Utilities</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Vendor / Supplier
+                    </label>
+                    <input
+                      type="text"
+                      value={expenseFormData.vendor}
+                      onChange={(e) =>
+                        setExpenseFormData({ ...expenseFormData, vendor: e.target.value })
+                      }
+                      placeholder="e.g. AWS Cloud, Adobe, Google Ads"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-medium"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Payment Method
+                    </label>
+                    <select
+                      value={expenseFormData.paymentMethod}
+                      onChange={(e) =>
+                        setExpenseFormData({ ...expenseFormData, paymentMethod: e.target.value })
+                      }
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white cursor-pointer font-medium"
+                    >
+                      <option value="Corporate Credit Card">Corporate Credit Card</option>
+                      <option value="Bank Wire">Bank Wire</option>
+                      <option value="bKash / Mobile Billing">bKash / Mobile Billing</option>
+                      <option value="PayPal / Online">PayPal / Online</option>
+                      <option value="Direct Cash">Direct Cash</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Date
+                    </label>
+                    <input
+                      type="date"
+                      value={expenseFormData.date}
+                      onChange={(e) =>
+                        setExpenseFormData({ ...expenseFormData, date: e.target.value })
+                      }
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white font-medium"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Status
+                    </label>
+                    <select
+                      value={expenseFormData.status}
+                      onChange={(e) =>
+                        setExpenseFormData({ ...expenseFormData, status: e.target.value })
+                      }
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white cursor-pointer font-medium"
+                    >
+                      <option value="Paid">Paid ✅</option>
+                      <option value="Pending">Pending ⏳</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setIsNewExpenseOpen(false)}
+                    className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-500/20 cursor-pointer transition-all"
+                  >
+                    {editingExpense ? 'Save Changes' : 'Log Expense'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* MODAL: ADD / EDIT TEAM MEMBER */}
+      <AnimatePresence>
+        {isNewEmployeeOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-slate-200 dark:border-slate-800 shadow-2xl relative"
+            >
+              <button
+                onClick={() => setIsNewEmployeeOpen(false)}
+                className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer text-sm font-bold w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center"
+              >
+                ✕
+              </button>
+
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">
+                {editingEmployee ? 'Edit Team Member' : 'Add New Team Member'}
+              </h2>
+              <p className="text-xs text-slate-500 mb-4">
+                Enter team member contact info, role, department, and status.
+              </p>
+
+              <form onSubmit={handleSaveEmployee} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={employeeFormData.name}
+                    onChange={(e) =>
+                      setEmployeeFormData({ ...employeeFormData, name: e.target.value })
+                    }
+                    placeholder="e.g. Rifat Hossain"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-medium"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Role / Designation *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={employeeFormData.role}
+                      onChange={(e) =>
+                        setEmployeeFormData({ ...employeeFormData, role: e.target.value })
+                      }
+                      placeholder="e.g. Senior DevOps Specialist"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-medium"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Department
+                    </label>
+                    <select
+                      value={employeeFormData.department}
+                      onChange={(e) =>
+                        setEmployeeFormData({ ...employeeFormData, department: e.target.value })
+                      }
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white cursor-pointer font-medium"
+                    >
+                      <option value="Engineering">Engineering</option>
+                      <option value="Creative">Creative</option>
+                      <option value="Marketing">Marketing</option>
+                      <option value="Operations">Operations</option>
+                      <option value="Management">Management</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      value={employeeFormData.email}
+                      onChange={(e) =>
+                        setEmployeeFormData({ ...employeeFormData, email: e.target.value })
+                      }
+                      placeholder="e.g. rifat@crafvanta.com"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-medium"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Phone Number
+                    </label>
+                    <input
+                      type="text"
+                      value={employeeFormData.phone}
+                      onChange={(e) =>
+                        setEmployeeFormData({ ...employeeFormData, phone: e.target.value })
+                      }
+                      placeholder="e.g. +880 1711 998877"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Status
+                    </label>
+                    <select
+                      value={employeeFormData.status}
+                      onChange={(e) =>
+                        setEmployeeFormData({ ...employeeFormData, status: e.target.value })
+                      }
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white cursor-pointer font-medium"
+                    >
+                      <option value="Active">Active</option>
+                      <option value="On Leave">On Leave</option>
+                      <option value="Remote">Remote</option>
+                      <option value="Inactive">Inactive</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Profile Picture URL (Optional)
+                    </label>
+                    <input
+                      type="url"
+                      value={employeeFormData.avatarUrl}
+                      onChange={(e) =>
+                        setEmployeeFormData({ ...employeeFormData, avatarUrl: e.target.value })
+                      }
+                      placeholder="https://..."
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2 flex justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setIsNewEmployeeOpen(false)}
+                    className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-500/20 cursor-pointer transition-all"
+                  >
+                    {editingEmployee ? 'Save Changes' : 'Add Team Member'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* MODAL 5: ADD VIDEO */}
       <AnimatePresence>
         {isNewVideoOpen && (
@@ -4810,7 +6365,7 @@ export default function AdminPanel({
                     placeholder="Thumbnail URL or upload below..."
                     className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white mb-2"
                   />
-                  <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 text-xs font-bold cursor-pointer">
+                  <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 text-xs font-bold cursor-pointer">
                     <span>📷 Upload Thumbnail</span>
                     <input
                       type="file"
@@ -4866,6 +6421,185 @@ export default function AdminPanel({
                   </button>
                 </div>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* MODAL: ADD / EDIT TASK */}
+      <AnimatePresence>
+        {isNewTaskOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-slate-200 dark:border-slate-800 shadow-2xl relative"
+            >
+              <button
+                onClick={() => setIsNewTaskOpen(false)}
+                className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer text-sm font-bold w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center"
+              >
+                ✕
+              </button>
+
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">
+                {editingTask ? 'Edit Task Details' : 'Create New Agency Task'}
+              </h2>
+              <p className="text-xs text-slate-500 mb-4">
+                Assign tasks to team members, set priorities, tags, and deadlines.
+              </p>
+
+              <form onSubmit={handleSaveTask} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Task Title *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={taskFormData.title}
+                    onChange={(e) =>
+                      setTaskFormData({ ...taskFormData, title: e.target.value })
+                    }
+                    placeholder="e.g. Develop React component for Invoice System"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-medium"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Assignee *
+                    </label>
+                    <select
+                      value={taskFormData.assignee}
+                      onChange={(e) =>
+                        setTaskFormData({ ...taskFormData, assignee: e.target.value })
+                      }
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white cursor-pointer font-medium"
+                    >
+                      {employeeList.map((emp) => (
+                        <option key={emp.id} value={emp.name}>
+                          {emp.name} ({emp.department})
+                        </option>
+                      ))}
+                      <option value="Tanvir Ahmed">Tanvir Ahmed</option>
+                      <option value="Sabrina Khan">Sabrina Khan</option>
+                      <option value="Mahmud Hasan">Mahmud Hasan</option>
+                      <option value="Nusrat Jahan">Nusrat Jahan</option>
+                      <option value="Unassigned">Unassigned</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Department / Tag
+                    </label>
+                    <select
+                      value={taskFormData.tag}
+                      onChange={(e) =>
+                        setTaskFormData({ ...taskFormData, tag: e.target.value })
+                      }
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white cursor-pointer font-medium"
+                    >
+                      <option value="Engineering">Engineering</option>
+                      <option value="Design">Design</option>
+                      <option value="Video">Video</option>
+                      <option value="Marketing">Marketing</option>
+                      <option value="Enterprise">Enterprise</option>
+                      <option value="Operations">Operations</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Priority
+                    </label>
+                    <select
+                      value={taskFormData.priority}
+                      onChange={(e) =>
+                        setTaskFormData({
+                          ...taskFormData,
+                          priority: e.target.value as 'High' | 'Medium' | 'Low',
+                        })
+                      }
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white cursor-pointer font-medium"
+                    >
+                      <option value="High">High 🔴</option>
+                      <option value="Medium">Medium 🟡</option>
+                      <option value="Low">Low 🟢</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Status
+                    </label>
+                    <select
+                      value={taskFormData.status}
+                      onChange={(e) =>
+                        setTaskFormData({
+                          ...taskFormData,
+                          status: e.target.value as 'To Do' | 'In Progress' | 'Completed',
+                        })
+                      }
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white cursor-pointer font-medium"
+                    >
+                      <option value="To Do">To Do</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Completed">Completed</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Due Date
+                    </label>
+                    <input
+                      type="date"
+                      value={taskFormData.dueDate}
+                      onChange={(e) =>
+                        setTaskFormData({ ...taskFormData, dueDate: e.target.value })
+                      }
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Description & Specs
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={taskFormData.description}
+                    onChange={(e) =>
+                      setTaskFormData({ ...taskFormData, description: e.target.value })
+                    }
+                    placeholder="Enter details, requirements, or technical notes..."
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-medium"
+                  />
+                </div>
+
+                <div className="pt-2 flex justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setIsNewTaskOpen(false)}
+                    className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-500/20 cursor-pointer transition-all"
+                  >
+                    {editingTask ? 'Save Changes' : 'Create Task'}
+                  </button>
+                </div>
+              </form>
             </motion.div>
           </div>
         )}

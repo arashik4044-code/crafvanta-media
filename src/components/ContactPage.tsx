@@ -35,13 +35,13 @@ export function ContactPage({ settings, onLeadSubmitted }: ContactPageProps) {
         transition={{ duration: 0.8, ease: "easeOut" }}
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-16"
       >
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 mb-6">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 mb-6">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           <span>✦ GET IN TOUCH · RESPONSE TIME &lt; 15 MINS ✦</span>
         </div>
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight mb-6 uppercase">
           Let’s Build Something <br className="hidden sm:inline" />
-          <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-emerald-600 via-indigo-600 to-cyan-500 bg-clip-text text-transparent">
             Extraordinary Together
           </span>
         </h1>
@@ -65,7 +65,7 @@ export function ContactPage({ settings, onLeadSubmitted }: ContactPageProps) {
                 {/* WhatsApp / Phone */}
                 <a
                   href={`tel:${settings.phone.replace(/\s+/g, '')}`}
-                  className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 transition-all group shadow-xs"
+                  className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 transition-all group shadow-xs"
                 >
                   <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-lg group-hover:scale-110 transition-transform">
                     📞
@@ -79,9 +79,9 @@ export function ContactPage({ settings, onLeadSubmitted }: ContactPageProps) {
                 {/* Email */}
                 <a
                   href={`mailto:${settings.email}`}
-                  className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 transition-all group shadow-xs"
+                  className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 transition-all group shadow-xs"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-lg group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-lg group-hover:scale-110 transition-transform">
                     ✉️
                   </div>
                   <div>
@@ -124,7 +124,7 @@ export function ContactPage({ settings, onLeadSubmitted }: ContactPageProps) {
                 </p>
                 <button
                   onClick={() => setSubmitted(false)}
-                  className="px-8 py-3 rounded-full bg-blue-600 text-white font-bold text-xs uppercase tracking-wider hover:bg-blue-700 transition-colors cursor-pointer"
+                  className="px-8 py-3 rounded-full bg-emerald-600 text-white font-bold text-xs uppercase tracking-wider hover:bg-emerald-700 transition-colors cursor-pointer"
                 >
                   Send Another Inquiry
                 </button>
@@ -149,7 +149,7 @@ export function ContactPage({ settings, onLeadSubmitted }: ContactPageProps) {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="e.g. Tanvir Ahmed"
-                      className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs focus:outline-hidden focus:border-blue-500"
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs focus:outline-hidden focus:border-emerald-500"
                     />
                   </div>
 
@@ -163,7 +163,7 @@ export function ContactPage({ settings, onLeadSubmitted }: ContactPageProps) {
                       value={contact}
                       onChange={(e) => setContact(e.target.value)}
                       placeholder="e.g. +8801700000000"
-                      className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs focus:outline-hidden focus:border-blue-500"
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs focus:outline-hidden focus:border-emerald-500"
                     />
                   </div>
                 </div>
@@ -176,7 +176,7 @@ export function ContactPage({ settings, onLeadSubmitted }: ContactPageProps) {
                     <select
                       value={service}
                       onChange={(e) => setService(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs focus:outline-hidden focus:border-blue-500"
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs focus:outline-hidden focus:border-emerald-500"
                     >
                       <option value="Social Media Management">Social Media Management</option>
                       <option value="Web Design & Development">Web Design & Development</option>
@@ -194,7 +194,7 @@ export function ContactPage({ settings, onLeadSubmitted }: ContactPageProps) {
                     <select
                       value={budget}
                       onChange={(e) => setBudget(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs focus:outline-hidden focus:border-blue-500"
+                      className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs focus:outline-hidden focus:border-emerald-500"
                     >
                       <option value="৳8,500 - ৳15,000">৳8,500 - ৳15,000</option>
                       <option value="৳15,000 - ৳30,000">৳15,000 - ৳30,000</option>
@@ -213,13 +213,13 @@ export function ContactPage({ settings, onLeadSubmitted }: ContactPageProps) {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="Describe your business goals, target audience, and specific requirements..."
-                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs focus:outline-hidden focus:border-blue-500 resize-none"
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs focus:outline-hidden focus:border-emerald-500 resize-none"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-blue-500/25 transition-all cursor-pointer"
+                  className="w-full py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/25 transition-all cursor-pointer"
                 >
                   Submit Project Inquiry →
                 </button>

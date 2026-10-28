@@ -73,6 +73,8 @@ export interface AgencySettings {
   youtubeURL?: string;
   githubURL?: string;
   logoUrl?: string;
+  primaryColor?: string;
+  logoBadgeColor?: string;
   bkashNumber?: string;
   nagadNumber?: string;
   bankDetails?: string;

@@ -81,11 +81,11 @@ export function CustomCursor() {
         }}
         animate={{
           scale: isHovered ? 1.8 : 1,
-          backgroundColor: isHovered ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0)',
-          borderColor: isHovered ? 'rgba(59, 130, 246, 0.8)' : 'rgba(59, 130, 246, 0.4)',
+          backgroundColor: isHovered ? 'rgba(5, 150, 105, 0.15)' : 'rgba(5, 150, 105, 0)',
+          borderColor: isHovered ? 'rgba(5, 150, 105, 0.8)' : 'rgba(5, 150, 105, 0.4)',
         }}
         transition={{ duration: 0.15, ease: 'easeOut' }}
-        className="fixed top-0 left-0 w-9 h-9 rounded-full border border-blue-500/50 backdrop-blur-[1px] pointer-events-none"
+        className="fixed top-0 left-0 w-9 h-9 rounded-full border border-emerald-500/50 backdrop-blur-[1px] pointer-events-none"
       />
 
       {/* Inner Precision Center Dot */}
@@ -98,10 +98,10 @@ export function CustomCursor() {
         }}
         animate={{
           scale: isHovered ? 0.5 : 1,
-          backgroundColor: isHovered ? '#2563eb' : '#3b82f6',
+          backgroundColor: isHovered ? '#059669' : '#10b981',
         }}
         transition={{ duration: 0.1, ease: 'easeOut' }}
-        className="fixed top-0 left-0 w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.8)] pointer-events-none"
+        className="fixed top-0 left-0 w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)] pointer-events-none"
       />
     </div>
   );

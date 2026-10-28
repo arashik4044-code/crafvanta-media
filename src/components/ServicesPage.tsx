@@ -2,13 +2,25 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 
 import { ServiceItem } from '../types';
+import { ArrowLeftRight, Check, Scale } from 'lucide-react';
 
 interface ServicesPageProps {
   onOpenContact: () => void;
   onOpenServiceDetail?: (serviceId: string) => void;
+  allServices?: ServiceItem[];
+  comparingServiceIds?: string[];
+  onToggleCompareService?: (serviceId: string) => void;
+  onOpenCompareModal?: (serviceIds?: string[]) => void;
 }
 
-export function ServicesPage({ onOpenContact, onOpenServiceDetail }: ServicesPageProps) {
+export function ServicesPage({
+  onOpenContact,
+  onOpenServiceDetail,
+  allServices = [],
+  comparingServiceIds = [],
+  onToggleCompareService,
+  onOpenCompareModal,
+}: ServicesPageProps) {
   const [activeCoreTab, setActiveCoreTab] = useState(0);
   const [activePhase, setActivePhase] = useState(0);
   const [selectedCapabilities, setSelectedCapabilities] = useState<string[]>([
@@ -138,12 +150,12 @@ export function ServicesPage({ onOpenContact, onOpenServiceDetail }: ServicesPag
               transition={{ duration: 0.6, ease: "easeOut" }}
               className="space-y-6"
             >
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 text-xs font-bold uppercase tracking-wider">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider">
                 <span>✦</span> CORE DIGITAL EXPERTISE
               </div>
 
               <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-slate-950 dark:text-white uppercase leading-none">
-                CORE <span className="text-blue-600 dark:text-blue-500">SERVICES</span>
+                CORE <span className="text-emerald-600 dark:text-emerald-500">SERVICES</span>
               </h1>
 
               <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl">
@@ -154,7 +166,7 @@ export function ServicesPage({ onOpenContact, onOpenServiceDetail }: ServicesPag
             <div className="flex flex-wrap items-center gap-4 pt-2">
               <a
                 href="#strategic-services"
-                className="px-6 py-3 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-blue-500/25 flex items-center gap-2 transition-all"
+                className="px-6 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/25 flex items-center gap-2 transition-all"
               >
                 <span>Explore Services</span>
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor">
@@ -185,10 +197,10 @@ export function ServicesPage({ onOpenContact, onOpenServiceDetail }: ServicesPag
           {/* Right Interactive Advantage Card */}
           <div className="lg:col-span-5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
             <div className="flex items-center justify-between pb-6 border-b border-slate-200 dark:border-slate-800">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
                 ✓
               </div>
-              <span className="text-[10px] font-bold tracking-widest uppercase px-3 py-1 bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 rounded-full">
+              <span className="text-[10px] font-bold tracking-widest uppercase px-3 py-1 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 rounded-full">
                 {coreAdvantages[activeCoreTab].badge}
               </span>
             </div>
@@ -197,7 +209,7 @@ export function ServicesPage({ onOpenContact, onOpenServiceDetail }: ServicesPag
               <p className="text-sm sm:text-base text-slate-700 dark:text-slate-200 leading-relaxed italic mb-4">
                 {coreAdvantages[activeCoreTab].description}
               </p>
-              <p className="text-xs font-semibold text-blue-600 dark:text-blue-400">
+              <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                 {coreAdvantages[activeCoreTab].subtext}
               </p>
             </div>
@@ -212,8 +224,8 @@ export function ServicesPage({ onOpenContact, onOpenServiceDetail }: ServicesPag
                   onClick={() => setActiveCoreTab(idx)}
                   className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl border text-xs font-bold transition-all cursor-pointer ${
                     activeCoreTab === idx
-                      ? 'bg-blue-600 text-white border-blue-600 shadow-md'
-                      : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-blue-400'
+                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-md'
+                      : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-400'
                   }`}
                 >
                   <span>{item.title}</span>
@@ -249,68 +261,124 @@ export function ServicesPage({ onOpenContact, onOpenServiceDetail }: ServicesPag
           className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-16"
         >
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 text-xs font-bold uppercase tracking-wider mb-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider mb-3">
               <span>✦</span> CORE CAPABILITIES
             </div>
             <h2 className="text-3xl sm:text-5xl font-black text-slate-950 dark:text-white uppercase tracking-tight">
-              STRATEGIC <span className="text-blue-600 dark:text-blue-500">SERVICES</span>
+              STRATEGIC <span className="text-emerald-600 dark:text-emerald-500">SERVICES</span>
             </h2>
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-sm">
-            Tailored digital solutions engineered to scale brands, capture high-intent audiences, and optimize business growth.
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-sm">
+              Tailored digital solutions engineered to scale brands, capture high-intent audiences, and optimize business growth.
+            </p>
+            <button
+              onClick={() => onOpenCompareModal?.()}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full border border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/40 text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all cursor-pointer shadow-xs whitespace-nowrap self-start sm:self-auto"
+            >
+              <ArrowLeftRight className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span>Compare Services</span>
+              {comparingServiceIds.length > 0 && (
+                <span className="w-5 h-5 rounded-full bg-emerald-600 text-white text-[10px] font-bold flex items-center justify-center ml-0.5">
+                  {comparingServiceIds.length}
+                </span>
+              )}
+            </button>
+          </div>
         </motion.div>
 
         <div className="grid md:grid-cols-2 gap-8">
-          {strategicServices.map((s, idx) => (
-            <div
-              key={idx}
-              className="bg-slate-50/80 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-8 flex flex-col justify-between hover:border-blue-500/50 transition-all group shadow-sm hover:shadow-xl"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-6">
-                  <div className="px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 text-xs font-bold uppercase tracking-wider border border-blue-200/60 dark:border-blue-800/60">
-                    {s.category}
-                  </div>
-                  <span className="text-2xl font-black text-slate-300 dark:text-slate-700 group-hover:text-blue-600 transition-colors">
-                    {s.num}
-                  </span>
-                </div>
-
-                <h3 className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white mb-3">
-                  {s.title}
-                </h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
-                  {s.desc}
-                </p>
-
-                {/* Check list */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-8">
-                  {s.tags.map((tag, tIdx) => (
-                    <div key={tIdx} className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300">
-                      <span className="w-4 h-4 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] font-bold">✓</span>
-                      <span>{tag}</span>
+          {strategicServices.map((s, idx) => {
+            const isComparing = comparingServiceIds.includes(s.serviceId);
+            return (
+              <div
+                key={idx}
+                className={`bg-slate-50/80 dark:bg-slate-900 border rounded-3xl p-8 flex flex-col justify-between transition-all group shadow-sm hover:shadow-xl ${
+                  isComparing
+                    ? 'border-emerald-500 ring-2 ring-emerald-500/50 shadow-emerald-500/10'
+                    : 'border-slate-200/80 dark:border-slate-800 hover:border-emerald-500/50'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-2">
+                      <div className="px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider border border-emerald-200/60 dark:border-emerald-800/60">
+                        {s.category}
+                      </div>
+                      <button
+                        onClick={() => onToggleCompareService?.(s.serviceId)}
+                        className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full border transition-all cursor-pointer shadow-2xs ${
+                          isComparing
+                            ? 'bg-emerald-600 text-white border-emerald-600 ring-2 ring-emerald-400/50'
+                            : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-500 hover:text-emerald-600'
+                        }`}
+                      >
+                        {isComparing ? (
+                          <>
+                            <Check className="w-3 h-3 text-white" />
+                            <span>Compared</span>
+                          </>
+                        ) : (
+                          <>
+                            <ArrowLeftRight className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                            <span>Compare</span>
+                          </>
+                        )}
+                      </button>
                     </div>
-                  ))}
+                    <span className="text-2xl font-black text-slate-300 dark:text-slate-700 group-hover:text-emerald-600 transition-colors">
+                      {s.num}
+                    </span>
+                  </div>
+
+                  <h3 className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white mb-3">
+                    {s.title}
+                  </h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
+                    {s.desc}
+                  </p>
+
+                  {/* Check list */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-8">
+                    {s.tags.map((tag, tIdx) => (
+                      <div key={tIdx} className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300">
+                        <span className="w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-[10px] font-bold">✓</span>
+                        <span>{tag}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-6 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between flex-wrap gap-4">
+                  <span className="text-xs italic text-slate-500 dark:text-slate-400">
+                    {s.footerQuote}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => onToggleCompareService?.(s.serviceId)}
+                      title={isComparing ? "Remove from compare" : "Compare this service"}
+                      className={`p-2 rounded-full border transition-all cursor-pointer ${
+                        isComparing
+                          ? 'bg-emerald-600 text-white border-emerald-600'
+                          : 'border-slate-200 dark:border-slate-700 text-slate-500 hover:text-emerald-600 hover:border-emerald-500'
+                      }`}
+                    >
+                      <Scale className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => onOpenServiceDetail?.(s.serviceId)}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-emerald-500/30 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all cursor-pointer"
+                    >
+                      <span>Learn more</span>
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
-
-              <div className="pt-6 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between flex-wrap gap-4">
-                <span className="text-xs italic text-slate-500 dark:text-slate-400">
-                  {s.footerQuote}
-                </span>
-                <button
-                  onClick={() => onOpenServiceDetail?.(s.serviceId)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-blue-500/30 text-xs font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white transition-all cursor-pointer"
-                >
-                  <span>Learn more</span>
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </motion.section>
 
@@ -329,11 +397,11 @@ export function ServicesPage({ onOpenContact, onOpenServiceDetail }: ServicesPag
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="text-center max-w-2xl mx-auto mb-16"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 text-xs font-bold uppercase tracking-wider mb-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider mb-3">
             <span>✦</span> METHODOLOGY & WORKFLOW
           </div>
           <h2 className="text-3xl sm:text-5xl font-black text-slate-950 dark:text-white uppercase tracking-tight">
-            HOW WE <span className="text-blue-600 dark:text-blue-500">DELIVER</span>
+            HOW WE <span className="text-emerald-600 dark:text-emerald-500">DELIVER</span>
           </h2>
           <p className="mt-3 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
             A battle-tested 4-step execution framework engineered to guarantee consistent quality, execution speed, and long-term value.
@@ -348,8 +416,8 @@ export function ServicesPage({ onOpenContact, onOpenServiceDetail }: ServicesPag
               onClick={() => setActivePhase(idx)}
               className={`p-5 rounded-2xl border text-left transition-all cursor-pointer ${
                 activePhase === idx
-                  ? 'bg-blue-600 text-white border-blue-600 shadow-xl'
-                  : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:border-blue-400'
+                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-xl'
+                  : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:border-emerald-400'
               }`}
             >
               <div className="flex items-center justify-between mb-2">
@@ -367,11 +435,11 @@ export function ServicesPage({ onOpenContact, onOpenServiceDetail }: ServicesPag
 
         {/* Active Phase Detail Card */}
         <div className="bg-slate-900 text-white rounded-3xl p-8 sm:p-12 border border-slate-800 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
+          <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 blur-[120px] rounded-full pointer-events-none" />
 
           <div className="relative z-10 grid md:grid-cols-12 gap-8 items-center">
             <div className="md:col-span-7 space-y-4">
-              <span className="text-xs font-bold uppercase tracking-widest text-blue-400">
+              <span className="text-xs font-bold uppercase tracking-widest text-emerald-400">
                 {workflowPhases[activePhase].subtitle}
               </span>
               <h3 className="text-2xl sm:text-3xl font-black">
@@ -388,7 +456,7 @@ export function ServicesPage({ onOpenContact, onOpenServiceDetail }: ServicesPag
               </span>
               {workflowPhases[activePhase].deliverables.map((deliv, dIdx) => (
                 <div key={dIdx} className="flex items-center gap-3 text-xs font-semibold text-slate-200 bg-slate-900/60 px-4 py-3 rounded-xl border border-slate-700/50">
-                  <span className="w-2 h-2 rounded-full bg-blue-500" />
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
                   <span>{deliv}</span>
                 </div>
               ))}
@@ -407,12 +475,12 @@ export function ServicesPage({ onOpenContact, onOpenServiceDetail }: ServicesPag
       >
         <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 sm:p-14 grid lg:grid-cols-12 gap-10 items-center shadow-xl">
           <div className="lg:col-span-7 space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 text-xs font-bold uppercase tracking-wider">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider">
               <span>✦</span> TAILORED FOR YOUR BUSINESS
             </div>
 
             <h2 className="text-3xl sm:text-4xl font-black text-slate-950 dark:text-white uppercase tracking-tight">
-              NEED A <span className="text-blue-600 dark:text-blue-500">CUSTOM SOLUTION?</span>
+              NEED A <span className="text-emerald-600 dark:text-emerald-500">CUSTOM SOLUTION?</span>
             </h2>
 
             <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -432,8 +500,8 @@ export function ServicesPage({ onOpenContact, onOpenServiceDetail }: ServicesPag
                       onClick={() => toggleCapability(cap)}
                       className={`px-4 py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
                         isSelected
-                          ? 'bg-blue-600 text-white shadow-md border border-blue-600'
-                          : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-blue-400'
+                          ? 'bg-emerald-600 text-white shadow-md border border-emerald-600'
+                          : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-emerald-400'
                       }`}
                     >
                       <span>{isSelected ? '✓' : '+'}</span>
@@ -448,7 +516,7 @@ export function ServicesPage({ onOpenContact, onOpenServiceDetail }: ServicesPag
           <div className="lg:col-span-5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 space-y-6 shadow-md">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
               <span className="text-xs font-bold uppercase tracking-widest text-slate-400">PACKAGE CONFIG</span>
-              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400">
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400">
                 {selectedCapabilities.length} SELECTED
               </span>
             </div>
@@ -456,18 +524,18 @@ export function ServicesPage({ onOpenContact, onOpenServiceDetail }: ServicesPag
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-bold text-slate-900 dark:text-white">Explore Structured Packages</span>
-                <button onClick={onOpenContact} className="text-xs font-bold text-blue-600 hover:underline">
+                <button onClick={onOpenContact} className="text-xs font-bold text-emerald-600 hover:underline">
                   Browse →
                 </button>
               </div>
-              <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900 flex items-center justify-between">
+              <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-900 flex items-center justify-between">
                 <div>
                   <h4 className="text-xs font-bold text-slate-900 dark:text-white">Book Custom Strategy Call</h4>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Talk with our digital growth team</p>
                 </div>
                 <button
                   onClick={onOpenContact}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
                 >
                   Call →
                 </button>
@@ -485,17 +553,17 @@ export function ServicesPage({ onOpenContact, onOpenServiceDetail }: ServicesPag
         transition={{ duration: 0.8, ease: "easeOut" }}
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16"
       >
-        <div className="bg-[#031535] text-white rounded-3xl p-8 sm:p-16 text-center relative overflow-hidden shadow-2xl border border-blue-900/60">
-          <div className="absolute inset-0 bg-radial from-blue-600/20 to-transparent pointer-events-none" />
+        <div className="bg-[#062016] text-white rounded-3xl p-8 sm:p-16 text-center relative overflow-hidden shadow-2xl border border-emerald-900/60">
+          <div className="absolute inset-0 bg-radial from-emerald-600/20 to-transparent pointer-events-none" />
 
           <div className="relative z-10 max-w-2xl mx-auto space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-900/50 border border-blue-700/60 text-blue-300 text-xs font-bold uppercase tracking-wider">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-900/50 border border-emerald-700/60 text-emerald-300 text-xs font-bold uppercase tracking-wider">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               ACCEPTING NEW PROJECTS · RESPONSE TIME &lt; 15 MINS
             </div>
 
             <h2 className="text-3xl sm:text-5xl font-black uppercase tracking-tight text-white">
-              READY TO <span className="text-blue-400">GET STARTED?</span>
+              READY TO <span className="text-emerald-400">GET STARTED?</span>
             </h2>
 
             <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
@@ -505,7 +573,7 @@ export function ServicesPage({ onOpenContact, onOpenServiceDetail }: ServicesPag
             <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
               <button
                 onClick={onOpenContact}
-                className="px-8 py-4 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-blue-500/25 flex items-center gap-2 transition-all cursor-pointer"
+                className="px-8 py-4 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/25 flex items-center gap-2 transition-all cursor-pointer"
               >
                 <span>Book Strategy Call</span>
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor">
@@ -524,7 +592,7 @@ export function ServicesPage({ onOpenContact, onOpenServiceDetail }: ServicesPag
               No commitment required · Free project estimation
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-8 border-t border-blue-900/60 text-xs text-slate-300 font-semibold">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-8 border-t border-emerald-900/60 text-xs text-slate-300 font-semibold">
               <div className="flex items-center justify-center gap-2">
                 <span>✓</span> Custom Strategy Map
               </div>

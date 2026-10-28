@@ -564,15 +564,15 @@ export function PortfolioCategoryPage({
   });
 
   return (
-    <div className="min-h-screen pt-20 pb-24 bg-white dark:bg-[#040810] text-slate-900 dark:text-white transition-colors selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen pt-20 pb-24 bg-white dark:bg-[#040810] text-slate-900 dark:text-white transition-colors selection:bg-emerald-600 selection:text-white">
       {/* 1. Sticky Breadcrumb & Quick Action Bar */}
       <div className="sticky top-16 z-30 bg-white/95 dark:bg-[#040810]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 py-3 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
           <button
             onClick={onBack}
-            className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer group"
+            className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer group"
           >
-            <span className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-blue-600 group-hover:text-white flex items-center justify-center transition-colors shadow-xs">
+            <span className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-emerald-600 group-hover:text-white flex items-center justify-center transition-colors shadow-xs">
               ←
             </span>
             <span>Back to All Categories</span>
@@ -581,14 +581,14 @@ export function PortfolioCategoryPage({
           <div className="hidden sm:flex items-center gap-2 text-xs text-slate-400 font-mono">
             <span>Portfolio</span>
             <span>/</span>
-            <span className="text-blue-600 dark:text-blue-400 font-bold">{category.title}</span>
+            <span className="text-emerald-600 dark:text-emerald-400 font-bold">{category.title}</span>
             <span>/</span>
             <span className="text-slate-500">Interactive Milestones</span>
           </div>
 
           <button
             onClick={() => onOpenContact(`${category.title} Project Inquiry`)}
-            className="px-4 py-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-md shadow-blue-500/20 cursor-pointer flex items-center gap-1.5 hover:scale-[1.02] active:scale-[0.98]"
+            className="px-4 py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-md shadow-emerald-500/20 cursor-pointer flex items-center gap-1.5 hover:scale-[1.02] active:scale-[0.98]"
           >
             <span>Start Similar Project</span>
             <span>→</span>
@@ -637,7 +637,7 @@ export function PortfolioCategoryPage({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/80 border border-blue-200 dark:border-blue-800 uppercase tracking-wider mb-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800 uppercase tracking-wider mb-2">
                 <span>✦ PROVEN EXECUTION METHODOLOGY ✦</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-slate-950 dark:text-white">
@@ -663,8 +663,8 @@ export function PortfolioCategoryPage({
                   onClick={() => setActiveCategoryPhase(idx)}
                   className={`p-4 rounded-2xl text-left transition-all cursor-pointer relative overflow-hidden border ${
                     isSelected
-                      ? 'bg-blue-600 text-white border-blue-600 shadow-xl shadow-blue-500/20 scale-[1.02]'
-                      : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-blue-400'
+                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-xl shadow-emerald-500/20 scale-[1.02]'
+                      : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-400'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
@@ -673,7 +673,7 @@ export function PortfolioCategoryPage({
                       {item.duration}
                     </span>
                   </div>
-                  <div className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 ${isSelected ? 'text-blue-200' : 'text-blue-600 dark:text-blue-400'}`}>
+                  <div className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 ${isSelected ? 'text-emerald-200' : 'text-emerald-600 dark:text-emerald-400'}`}>
                     {item.phase}
                   </div>
                   <div className="font-extrabold text-xs sm:text-sm truncate">
@@ -697,11 +697,11 @@ export function PortfolioCategoryPage({
               <div className="grid md:grid-cols-12 gap-8 items-center">
                 <div className="md:col-span-7 space-y-4">
                   <div className="flex items-center gap-3">
-                    <span className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xl font-bold shadow-xs">
+                    <span className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl font-bold shadow-xs">
                       {categoryRoadmap[activeCategoryPhase].icon}
                     </span>
                     <div>
-                      <span className="text-[10px] font-bold uppercase text-blue-600 dark:text-blue-400 font-mono tracking-wider">
+                      <span className="text-[10px] font-bold uppercase text-emerald-600 dark:text-emerald-400 font-mono tracking-wider">
                         {categoryRoadmap[activeCategoryPhase].phase} · {categoryRoadmap[activeCategoryPhase].duration}
                       </span>
                       <h3 className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white">
@@ -741,7 +741,7 @@ export function PortfolioCategoryPage({
       <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
               FEATURED CLIENT CASES & TIMELINES
             </span>
             <h2 className="text-3xl sm:text-4xl font-black text-slate-950 dark:text-white mt-1">
@@ -759,7 +759,7 @@ export function PortfolioCategoryPage({
               value={projectSearch}
               onChange={(e) => setProjectSearch(e.target.value)}
               placeholder="Search projects or tags..."
-              className="w-full px-4 py-2.5 pl-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 shadow-xs"
+              className="w-full px-4 py-2.5 pl-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 shadow-xs"
             />
             <span className="absolute left-3 top-3 text-xs text-slate-400">🔍</span>
           </div>
@@ -773,7 +773,7 @@ export function PortfolioCategoryPage({
               <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">No project case studies matched your filter.</h4>
               <button
                 onClick={() => setProjectSearch('')}
-                className="mt-3 px-4 py-1.5 rounded-full bg-blue-600 text-white text-xs font-bold"
+                className="mt-3 px-4 py-1.5 rounded-full bg-emerald-600 text-white text-xs font-bold"
               >
                 Clear Search
               </button>
@@ -790,13 +790,13 @@ export function PortfolioCategoryPage({
                   viewport={{ once: true, amount: 0.1 }}
                   transition={{ duration: 0.5, delay: pIdx * 0.1 }}
                   key={proj.id}
-                  className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-10 shadow-xl hover:border-blue-500/40 transition-all"
+                  className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-10 shadow-xl hover:border-emerald-500/40 transition-all"
                 >
                   <div className="grid lg:grid-cols-12 gap-8 items-start">
                     {/* Left Column: Project Overview & High-Impact Stats */}
                     <div className="lg:col-span-5 space-y-5">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-md bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900/60">
+                        <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-md bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/60">
                           {proj.duration}
                         </span>
                         <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-2.5 py-1 rounded-md border border-emerald-200 dark:border-emerald-800">
@@ -847,7 +847,7 @@ export function PortfolioCategoryPage({
                       <div className="pt-2">
                         <button
                           onClick={() => onOpenContact(`${proj.title} Consultation`)}
-                          className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-blue-500/25 flex items-center justify-center gap-2 hover:scale-[1.01]"
+                          className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-emerald-500/25 flex items-center justify-center gap-2 hover:scale-[1.01]"
                         >
                           <span>Request Similar Project Scope</span>
                           <span>→</span>
@@ -861,7 +861,7 @@ export function PortfolioCategoryPage({
                         {/* Timeline Header */}
                         <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-200/80 dark:border-slate-800">
                           <div>
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                               DEVELOPMENT TIMELINE
                             </span>
                             <h4 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">
@@ -888,12 +888,12 @@ export function PortfolioCategoryPage({
                                 }
                                 className={`p-3 rounded-xl text-left transition-all cursor-pointer border ${
                                   isCurrent
-                                    ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20'
-                                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-blue-400'
+                                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-500/20'
+                                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-400'
                                 }`}
                               >
                                 <div className="flex items-center justify-between mb-1">
-                                  <span className={`text-[10px] font-bold uppercase font-mono ${isCurrent ? 'text-blue-200' : 'text-slate-400'}`}>
+                                  <span className={`text-[10px] font-bold uppercase font-mono ${isCurrent ? 'text-emerald-200' : 'text-slate-400'}`}>
                                     {m.phase}
                                   </span>
                                   <span className={`w-2 h-2 rounded-full ${isCurrent ? 'bg-white' : 'bg-emerald-500'}`} />
@@ -901,7 +901,7 @@ export function PortfolioCategoryPage({
                                 <div className="text-xs font-bold truncate">
                                   {m.title}
                                 </div>
-                                <span className={`text-[10px] mt-0.5 block truncate ${isCurrent ? 'text-blue-100' : 'text-slate-400'}`}>
+                                <span className={`text-[10px] mt-0.5 block truncate ${isCurrent ? 'text-emerald-100' : 'text-slate-400'}`}>
                                   {m.duration}
                                 </span>
                               </button>
@@ -922,7 +922,7 @@ export function PortfolioCategoryPage({
                             {/* Milestone Meta Bar */}
                             <div className="flex flex-wrap items-center justify-between gap-2">
                               <div className="flex items-center gap-2">
-                                <span className="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900">
+                                <span className="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
                                   {currentMilestone.duration}
                                 </span>
                                 <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
@@ -930,7 +930,7 @@ export function PortfolioCategoryPage({
                                 </span>
                               </div>
 
-                              <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 font-mono">
+                              <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 font-mono">
                                 🎯 {currentMilestone.keyMetric}
                               </span>
                             </div>
@@ -972,7 +972,7 @@ export function PortfolioCategoryPage({
                                 {currentMilestone.tools.map((tool, tIdx) => (
                                   <span
                                     key={tIdx}
-                                    className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/40"
+                                    className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-900/40"
                                   >
                                     {tool}
                                   </span>
@@ -1006,7 +1006,7 @@ export function PortfolioCategoryPage({
                                 setActiveMilestones((prev) => ({ ...prev, [proj.id]: dotIdx }))
                               }
                               className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${
-                                currentMilestoneIdx === dotIdx ? 'bg-blue-600 w-6' : 'bg-slate-300 dark:bg-slate-700'
+                                currentMilestoneIdx === dotIdx ? 'bg-emerald-600 w-6' : 'bg-slate-300 dark:bg-slate-700'
                               }`}
                             />
                           ))}
@@ -1039,7 +1039,7 @@ export function PortfolioCategoryPage({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                 DISCOVER MORE DISCIPLINES
               </span>
               <h3 className="text-2xl font-black text-slate-950 dark:text-white mt-1">
@@ -1048,7 +1048,7 @@ export function PortfolioCategoryPage({
             </div>
             <button
               onClick={onBack}
-              className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+              className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
             >
               View All Categories Overview →
             </button>
@@ -1061,15 +1061,15 @@ export function PortfolioCategoryPage({
                 <div
                   key={other.id}
                   onClick={() => onSelectCategory(other)}
-                  className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-500/50 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+                  className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-emerald-500/50 shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
                 >
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-[10px] font-mono text-blue-600 dark:text-blue-400 font-bold uppercase">
+                      <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold uppercase">
                         {other.projectCount}
                       </span>
                     </div>
-                    <h4 className="font-bold text-base text-slate-950 dark:text-white group-hover:text-blue-600 transition-colors">
+                    <h4 className="font-bold text-base text-slate-950 dark:text-white group-hover:text-emerald-600 transition-colors">
                       {other.title}
                     </h4>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
@@ -1077,7 +1077,7 @@ export function PortfolioCategoryPage({
                     </p>
                   </div>
 
-                  <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 mt-4 inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                  <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 mt-4 inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                     <span>Inspect Timelines</span>
                     <span>→</span>
                   </span>

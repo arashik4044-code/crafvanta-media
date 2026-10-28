@@ -153,13 +153,13 @@ export function PricingPage({ onOpenContact }: PricingPageProps) {
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 mb-6">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 mb-6">
             <Sparkles className="w-3.5 h-3.5" />
             <span>✦ INVESTMENT & PACKAGES ✦</span>
           </div>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight mb-6">
             Transparent Pricing Built For <br className="hidden sm:inline" />
-            <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 bg-clip-text text-transparent">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 dark:from-emerald-400 dark:via-teal-300 dark:to-cyan-400">
               Maximum Business Growth
             </span>
           </h1>
@@ -182,8 +182,8 @@ export function PricingPage({ onOpenContact }: PricingPageProps) {
               onClick={() => setSelectedCategory(cat.id as any)}
               className={`px-5 py-2.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                 selectedCategory === cat.id
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25'
-                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:border-blue-500/50'
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-500/25'
+                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:border-emerald-500/50'
               }`}
             >
               {cat.label}
@@ -209,12 +209,12 @@ export function PricingPage({ onOpenContact }: PricingPageProps) {
               transition={{ duration: 0.4, delay: idx * 0.1 }}
               className={`relative flex flex-col rounded-3xl p-8 transition-all duration-300 ${
                 plan.popular
-                  ? 'bg-gradient-to-b from-blue-950/40 via-slate-900/90 to-slate-950 border-2 border-blue-500 shadow-2xl shadow-blue-500/10 lg:-translate-y-2'
+                  ? 'bg-gradient-to-b from-emerald-950/40 via-slate-900/90 to-slate-950 border-2 border-emerald-500 shadow-2xl shadow-emerald-500/10 lg:-translate-y-2'
                   : 'bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 shadow-lg shadow-slate-200/50 dark:shadow-none'
               }`}
             >
               {plan.popular && (
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[11px] font-bold tracking-wider uppercase shadow-md flex items-center gap-1.5">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[11px] font-bold tracking-wider uppercase shadow-md flex items-center gap-1.5">
                   <Star className="w-3 h-3 fill-current" />
                   Most Popular Choice
                 </div>
@@ -238,7 +238,7 @@ export function PricingPage({ onOpenContact }: PricingPageProps) {
 
               <div className="mb-6 pb-6 border-b border-slate-200 dark:border-slate-800">
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-4xl font-black tracking-tight text-slate-900 dark:text-white">
+                  <span className="text-4xl font-black tracking-tight text-slate-900 dark:text-white font-mono">
                     {plan.priceMonthly}
                   </span>
                   <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
@@ -253,7 +253,7 @@ export function PricingPage({ onOpenContact }: PricingPageProps) {
                 </p>
                 {plan.features.map((feature, fIdx) => (
                   <div key={fIdx} className="flex items-start gap-3">
-                    <div className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                    <div className="mt-0.5 flex-shrink-0 w-4 h-4 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                       <Check className="w-2.5 h-2.5 stroke-[3]" />
                     </div>
                     <span className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-tight">
@@ -267,8 +267,8 @@ export function PricingPage({ onOpenContact }: PricingPageProps) {
                 onClick={() => onOpenContact(plan.title)}
                 className={`w-full py-3.5 px-6 rounded-2xl text-xs font-bold tracking-wide transition-all flex items-center justify-center gap-2 cursor-pointer ${
                   plan.popular
-                    ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/30'
-                    : 'bg-slate-100 hover:bg-blue-600 dark:bg-slate-800 dark:hover:bg-blue-600 text-slate-900 hover:text-white dark:text-white transition-colors'
+                    ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30'
+                    : 'bg-slate-100 hover:bg-emerald-600 dark:bg-slate-800 dark:hover:bg-emerald-600 text-slate-900 hover:text-white dark:text-white transition-colors'
                 }`}
               >
                 <span>Get Started Now</span>
@@ -287,8 +287,8 @@ export function PricingPage({ onOpenContact }: PricingPageProps) {
         transition={{ duration: 0.8, ease: "easeOut" }}
         className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-20"
       >
-        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 p-8 sm:p-12 text-white shadow-2xl">
-          <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-emerald-950 via-teal-950 to-slate-950 p-8 sm:p-12 text-white shadow-2xl border border-emerald-900/50">
+          <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
           <div className="relative z-10 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-white/10 text-cyan-300 backdrop-blur-md mb-4">
               <Zap className="w-3.5 h-3.5" />
@@ -364,7 +364,7 @@ export function PricingPage({ onOpenContact }: PricingPageProps) {
               className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs"
             >
               <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
-                <HelpCircle className="w-4 h-4 text-blue-500" />
+                <HelpCircle className="w-4 h-4 text-emerald-500" />
                 {faq.q}
               </h3>
               <p className="text-xs text-slate-600 dark:text-slate-400 pl-6 leading-relaxed">
