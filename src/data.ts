@@ -208,7 +208,7 @@ export const initialHeroSlides: HeroSlideItem[] = [
     badge: 'Our services · 01/02',
     description:
       'ERP, POS, CRM, HRM, Accounting, Inventory, Business Management, School & Hospital Management, E-commerce, Booking & Reservation, Web Applications, Android & iOS Apps, SaaS Platforms, Customer Portals, Enterprise Systems, Automation Solutions, and Other Custom Software Solutions.',
-    image: '/src/assets/images/hero_software_3d_1792255061429.jpg',
+    image: '/assets/images/hero_software_3d_1792255061429.jpg',
   },
   {
     id: 'marketing',
@@ -218,7 +218,7 @@ export const initialHeroSlides: HeroSlideItem[] = [
     badge: 'Our services · 02/02',
     description:
       'Social Media Marketing, Facebook & Instagram Marketing, Content Marketing, Paid Advertising, Google Ads, Meta Ads, SEO, Lead Generation, Brand Promotion, Campaign Management, Influencer Marketing, Remarketing, Analytics & Performance Marketing, and Other Digital Marketing Solutions.',
-    image: '/src/assets/images/hero_marketing_3d_1792255060437.jpg',
+    image: '/assets/images/hero_marketing_3d_1792255060437.jpg',
   },
 ];
 

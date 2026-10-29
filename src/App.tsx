@@ -388,7 +388,18 @@ export default function App() {
       const saved = localStorage.getItem('crafvanta_hero_slides');
       if (saved) {
         try {
-          return JSON.parse(saved);
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed.map((item) => {
+              let img = item.image || '';
+              if (img.startsWith('/src/assets/images/')) {
+                img = img.replace('/src/assets/images/', '/assets/images/');
+              } else if (img && !img.startsWith('/') && !img.startsWith('http')) {
+                img = `/assets/images/${img}`;
+              }
+              return { ...item, image: img };
+            });
+          }
         } catch (e) {
           console.error(e);
         }
@@ -1075,14 +1086,20 @@ export default function App() {
             </div>
           </motion.div>
 
-          {/* 9 Services 3x3 Grid */}
+          {/* 9 Services 3x3 Grid with Polished Staggered Entrance */}
           <motion.div
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
+            viewport={{ once: true, amount: 0.12 }}
             variants={{
               hidden: { opacity: 0 },
-              visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+              visible: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.08,
+                  delayChildren: 0.08,
+                },
+              },
             }}
             className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
@@ -1092,8 +1109,22 @@ export default function App() {
                 <motion.div
                   key={item.id}
                   variants={{
-                    hidden: { opacity: 0, y: 30 },
-                    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+                    hidden: {
+                      opacity: 0,
+                      y: 36,
+                      scale: 0.96,
+                      filter: 'blur(4px)',
+                    },
+                    visible: {
+                      opacity: 1,
+                      y: 0,
+                      scale: 1,
+                      filter: 'blur(0px)',
+                      transition: {
+                        duration: 0.6,
+                        ease: [0.22, 1, 0.36, 1],
+                      },
+                    },
                   }}
                   className="h-full"
                 >
