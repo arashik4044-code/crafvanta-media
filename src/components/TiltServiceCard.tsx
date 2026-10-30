@@ -18,6 +18,11 @@ export function TiltServiceCard({
 }: TiltServiceCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const [imageSrc, setImageSrc] = useState(item.imageUrl);
+
+  React.useEffect(() => {
+    setImageSrc(item.imageUrl);
+  }, [item.imageUrl]);
 
   // Raw mouse offset normalized from -0.5 to 0.5
   const mouseX = useMotionValue(0);
@@ -96,11 +101,14 @@ export function TiltServiceCard({
 
         {/* Visual Device / Graphic Header with Image Support */}
         <div className="relative h-48 bg-gradient-to-br from-emerald-50 to-indigo-50/60 dark:from-slate-800 dark:to-slate-900 p-4 flex flex-col justify-between overflow-hidden border-b border-slate-100 dark:border-slate-800">
-          {item.imageUrl ? (
+          {imageSrc ? (
             <>
               <img
-                src={item.imageUrl}
+                src={imageSrc}
                 alt={item.title}
+                onError={() => {
+                  setImageSrc('https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80');
+                }}
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-b from-slate-950/50 via-transparent to-black/30 pointer-events-none" />

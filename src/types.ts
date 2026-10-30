@@ -30,6 +30,8 @@ export interface PortfolioCategory {
   borderClass: string;
   tags: string[];
   imageUrl?: string;
+  videoUrl?: string;
+  videoPreviewUrl?: string;
 }
 
 export interface ClientBrand {
@@ -79,3 +81,36 @@ export interface AgencySettings {
   nagadNumber?: string;
   bankDetails?: string;
 }
+
+export interface BeforeAfterMetric {
+  metricName: string;
+  before: string;
+  after: string;
+  improvement: string;
+  isPositiveImprovement: boolean;
+  unitOrContext?: string;
+}
+
+export interface CaseStudyItem {
+  id: string;
+  title: string;
+  client: string;
+  clientSub?: string;
+  category: 'Software & ERP' | 'eCommerce & Web' | 'Performance Marketing' | 'Mobile & SaaS';
+  timeline: string;
+  summary: string;
+  challenge: string;
+  solution: string;
+  keyOutcomeHighlight: string;
+  keyOutcomeSubtitle: string;
+  tags: string[];
+  imageUrl: string;
+  beforeAfterMetrics: BeforeAfterMetric[];
+  clientQuote?: {
+    text: string;
+    author: string;
+    role: string;
+  };
+  liveUrl?: string;
+}
+

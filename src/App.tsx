@@ -7,6 +7,7 @@ import {
   initialClients,
   initialSettings,
   initialHeroSlides,
+  initialCaseStudies,
 } from './data';
 import {
   LeadInquiry,
@@ -15,6 +16,7 @@ import {
   ClientBrand,
   AgencySettings,
   HeroSlideItem,
+  CaseStudyItem,
 } from './types';
 import AdminPanel from './components/AdminPanel';
 import { TestimonialSlider } from './components/TestimonialSlider';
@@ -23,11 +25,14 @@ import { PricingPage } from './components/PricingPage';
 import { ServiceDetailPage } from './components/ServiceDetailPage';
 import { PortfolioCategoryPage } from './components/PortfolioCategoryPage';
 import { ContactPage } from './components/ContactPage';
+import { CaseStudyGrid } from './components/CaseStudyGrid';
 import { BlurImage } from './components/BlurImage';
 import { CustomCursor } from './components/CustomCursor';
 import { ServiceComparisonModal } from './components/ServiceComparisonModal';
 import { ServiceCompareDock } from './components/ServiceCompareDock';
 import { TiltServiceCard } from './components/TiltServiceCard';
+import { PortfolioVideoCard } from './components/PortfolioVideoCard';
+import { CapabilityPdfDownloadButton } from './components/CapabilityPdfDownloadButton';
 import { ArrowLeftRight, Check, Scale } from 'lucide-react';
 
 // Helper for Hero Slide Icons
@@ -309,7 +314,7 @@ export default function App() {
           const parsed: ServiceItem[] = JSON.parse(saved);
           // If stored services don't have imageUrl, merge with initialServices imageUrls
           return parsed.map((item) => {
-            if (!item.imageUrl) {
+            if (!item.imageUrl || item.imageUrl.includes('photo-1556742049-0a67c5574f73')) {
               const matched = initialServices.find((s) => s.id === item.id);
               if (matched?.imageUrl) {
                 return { ...item, imageUrl: matched.imageUrl };
@@ -360,6 +365,21 @@ export default function App() {
       }
     }
     return initialClients;
+  });
+
+  const [caseStudies, setCaseStudies] = useState<CaseStudyItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('crafvanta_case_studies');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+    return initialCaseStudies;
   });
 
   const [settings, setSettings] = useState<AgencySettings>(() => {
@@ -429,6 +449,10 @@ export default function App() {
   }, [clients]);
 
   useEffect(() => {
+    localStorage.setItem('crafvanta_case_studies', JSON.stringify(caseStudies));
+  }, [caseStudies]);
+
+  useEffect(() => {
     localStorage.setItem('crafvanta_settings', JSON.stringify(settings));
     if (settings.seoTitle) {
       document.title = settings.seoTitle;
@@ -449,6 +473,16 @@ export default function App() {
       ogDesc.setAttribute('content', settings.seoDescription);
     }
   }, [settings]);
+
+  useEffect(() => {
+    const handleHash = () => {
+      if (window.location.hash === '#contact') {
+        setIsContactOpen(true);
+      }
+    };
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
 
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     if (typeof window !== 'undefined') {
@@ -597,6 +631,13 @@ export default function App() {
               className="px-4 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               Portfolio
+            </a>
+            <a
+              href="#casestudies"
+              onClick={() => setCurrentPage('home')}
+              className="px-4 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+            >
+              Case Studies
             </a>
             <a
               href="#clients"
@@ -1167,15 +1208,18 @@ export default function App() {
                 Our work, <span className="text-emerald-600 dark:text-emerald-400">by category</span>
               </h2>
             </div>
-            <a
-              href="#contact"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors w-fit"
-            >
-              <span>View all projects</span>
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-              </svg>
-            </a>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <CapabilityPdfDownloadButton variant="header" />
+              <a
+                href="#contact"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors w-fit"
+              >
+                <span>View all projects</span>
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+              </a>
+            </div>
           </motion.div>
 
           {/* Category Filter Buttons */}
@@ -1200,94 +1244,30 @@ export default function App() {
             ))}
           </div>
 
-          {/* 4 Tall Vertical Gradient Category Cards */}
+          {/* 4 Dynamic Category Cards with Hover Video Previews */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {portfolio
               .filter((cat) => portfolioFilter === 'all' || cat.id === portfolioFilter)
               .map((cat) => (
-              <div
-                key={cat.id}
-                onClick={() => handleOpenPortfolioCategory(cat)}
-                className={`group relative rounded-3xl bg-gradient-to-b ${cat.gradientClass} text-white p-6 min-h-[480px] flex flex-col justify-between border ${cat.borderClass} shadow-xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer overflow-hidden`}
-              >
-                {/* Background Demo Photo with atmospheric blend */}
-                {cat.imageUrl && (
-                  <div className="absolute inset-0 z-0 overflow-hidden">
-                    <img
-                      src={cat.imageUrl}
-                      alt={cat.title}
-                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110 opacity-30 group-hover:opacity-40"
-                    />
-                    <div className={`absolute inset-0 bg-gradient-to-b ${cat.gradientClass} opacity-85 group-hover:opacity-75 transition-opacity duration-300`} />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-slate-950/30" />
-                  </div>
-                )}
-
-                {/* Top Section */}
-                <div className="relative z-10 flex items-center justify-between">
-                  <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/15">
-                    {getCategoryIcon(cat.id)}
-                  </div>
-                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-black/40 backdrop-blur-md border border-white/15 text-slate-200">
-                    {cat.projectCount}
-                  </span>
-                </div>
-
-                {/* Middle Showcase Demo Image Card */}
-                {cat.imageUrl && (
-                  <div className="relative z-10 my-4 w-full rounded-2xl overflow-hidden border border-white/20 shadow-2xl group-hover:border-white/40 transition-all duration-300">
-                    <div className="relative h-36 w-full overflow-hidden">
-                      <img
-                        src={cat.imageUrl}
-                        alt={`${cat.title} Showcase`}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                      <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between text-[10px] font-semibold text-white/90">
-                        <span className="px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                          <span>Demo Showcase</span>
-                        </span>
-                        <span className="opacity-80">↗ View</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Ambient Pattern */}
-                <div className="absolute inset-0 bg-radial from-white/5 to-transparent pointer-events-none" />
-
-                {/* Bottom Section */}
-                <div className="relative z-10 space-y-3.5">
-                  <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-white group-hover:text-emerald-200 transition-colors">
-                    {cat.title}
-                  </h3>
-
-                  {/* Category Filter Chips */}
-                  <div className="flex flex-wrap gap-1.5">
-                    {cat.tags.map((tag, idx) => (
-                      <span
-                        key={idx}
-                        className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-white/10 hover:bg-white/20 border border-white/10 text-slate-200 transition-colors"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Watch all CTA */}
-                  <div className="pt-1 flex items-center gap-1.5 text-xs font-semibold text-white/90 group-hover:text-white">
-                    <span>Watch all</span>
-                    <svg className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-            ))}
+                <PortfolioVideoCard
+                  key={cat.id}
+                  category={cat}
+                  categoryIcon={getCategoryIcon(cat.id)}
+                  onSelectCategory={handleOpenPortfolioCategory}
+                />
+              ))}
           </div>
         </div>
       </motion.section>
+
+      {/* Dedicated Case Study Grid with Before vs After Performance Comparisons */}
+      <CaseStudyGrid
+        caseStudies={caseStudies}
+        onSelectServiceForContact={(serviceCategory) => {
+          setContactService(serviceCategory);
+          setIsContactOpen(true);
+        }}
+      />
 
       {/* Testimonials Carousel Section */}
       <motion.div
@@ -1298,6 +1278,9 @@ export default function App() {
       >
         <TestimonialSlider />
       </motion.div>
+
+      {/* Target for #contact navigation */}
+      <div id="contact" className="relative -top-20 pointer-events-none" />
         </>
       )}
 
@@ -1365,6 +1348,7 @@ export default function App() {
                 <li><a href="#home" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">HOME</a></li>
                 <li><a href="#services" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">SERVICES</a></li>
                 <li><a href="#portfolio" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">PORTFOLIO</a></li>
+                <li><a href="#casestudies" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">CASE STUDIES</a></li>
                 <li><a href="#services" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">PACKAGES</a></li>
               </ul>
             </div>

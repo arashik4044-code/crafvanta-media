@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PortfolioCategory } from '../types';
 
@@ -24,8 +24,87 @@ interface ProjectCase {
   description: string;
   tags: string[];
   coverImage?: string;
+  videoUrl?: string;
   milestones: MilestoneItem[];
 }
+
+const ProjectHoverThumbnail: React.FC<{
+  coverImage?: string;
+  videoUrl?: string;
+  title: string;
+  resultSub: string;
+}> = ({ coverImage, videoUrl, title, resultSub }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+    if (videoRef.current) {
+      videoRef.current
+        .play()
+        .then(() => setIsPlaying(true))
+        .catch(() => setIsPlaying(false));
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    if (videoRef.current) {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  return (
+    <div
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className="relative rounded-2xl overflow-hidden aspect-16/9 border border-slate-200 dark:border-slate-800 shadow-md group cursor-pointer bg-slate-950"
+    >
+      {coverImage && (
+        <img
+          src={coverImage}
+          alt={title}
+          className={`w-full h-full object-cover transition-all duration-500 ${
+            isPlaying ? 'opacity-0' : 'opacity-100 group-hover:scale-105'
+          }`}
+        />
+      )}
+
+      {videoUrl && (
+        <video
+          ref={videoRef}
+          src={videoUrl}
+          muted
+          loop
+          playsInline
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+            isPlaying ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+        />
+      )}
+
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 flex flex-col justify-between p-3.5 pointer-events-none z-10">
+        <div className="flex items-center justify-between">
+          <span className="px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-[10px] font-bold text-white border border-white/10 flex items-center gap-1 font-mono">
+            <span className={`w-1.5 h-1.5 rounded-full ${isPlaying ? 'bg-rose-500 animate-ping' : 'bg-emerald-400'}`} />
+            <span>{isPlaying ? 'LIVE PREVIEW' : 'HOVER TO PLAY'}</span>
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold text-white drop-shadow-sm font-mono">
+            {resultSub}
+          </span>
+          <span className="text-[10px] font-bold text-emerald-400 bg-black/60 px-2 py-0.5 rounded-md backdrop-blur-md">
+            ↗ Video Preview
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 interface PortfolioCategoryPageProps {
   category: PortfolioCategory;
@@ -813,20 +892,14 @@ export function PortfolioCategoryPage({
                         </h3>
                       </div>
 
-                      {/* Project Visual Thumbnail */}
-                      {proj.coverImage && (
-                        <div className="relative rounded-2xl overflow-hidden aspect-16/9 border border-slate-200 dark:border-slate-800 shadow-md group">
-                          <img
-                            src={proj.coverImage}
-                            alt={proj.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-4">
-                            <span className="text-xs font-bold text-white drop-shadow-sm">
-                              {proj.resultSub}
-                            </span>
-                          </div>
-                        </div>
+                      {/* Project Visual Thumbnail with Video Hover Preview */}
+                      {(proj.coverImage || proj.videoUrl) && (
+                        <ProjectHoverThumbnail
+                          coverImage={proj.coverImage}
+                          videoUrl={proj.videoUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'}
+                          title={proj.title}
+                          resultSub={proj.resultSub}
+                        />
                       )}
 
                       <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
